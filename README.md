@@ -1,5 +1,8 @@
 # Assumption Tracker for the Pi coding agent
 
+[![CI](https://github.com/adihem/assumption-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/adihem/assumption-tracker/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A [Pi](https://pi.dev) extension that makes an AI coding agent's unstated choices **visible, reviewable and
 persistent**. The agent can report a *candidate assumption*, for example "Use SQLite for storage", without stopping its work.
 You review it whenever you like (accept, correct, defer or reject), and your decision reaches the agent on your next message.
@@ -11,8 +14,9 @@ decisions or undo code. See [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.m
 Requirements: Node.js 22.19+ (tested on 26.3.0), npm, and Git. Pi is installed as a project dependency
 (`@earendil-works/pi-coding-agent` 1.3.0), so no global install is needed.
 
-Get the project folder first: clone it from the repository URL you were given, or unzip a copy. Then, inside it:
 ```bash
+git clone https://github.com/adihem/assumption-tracker.git
+cd assumption-tracker
 npm install --ignore-scripts
 npm test
 npm run smoke
@@ -117,5 +121,5 @@ them. To remove a test session, delete its `.jsonl` file there. The extension ma
 Pi's own, sent to the provider you configure.
 
 ## License
-[MIT](LICENSE) © 2026 Hemanth Sriram. The original specification is in [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md).
+[MIT](LICENSE) © 2026 adihem. The original specification is in [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md).
 Continuous integration (`.github/workflows/ci.yml`) runs typecheck, tests, smoke and e2e on Ubuntu and Windows with no model or secrets.

@@ -47,7 +47,7 @@ You need **Node.js 22.19 or newer**. Git is not needed.
 
 ## Part C — Tester: get the project and check it works (5 min)
 
-1. **Unzip** `assumption-tracker.zip` into a short path, for example `C:\Users\<you>\Documents\assumption-tracker`
+1. **Unzip** `assumption-tracker.zip` (or `git clone https://github.com/adihem/assumption-tracker.git`) into a short path, for example `C:\Users\<you>\Documents\assumption-tracker`
    or `~/assumption-tracker`. Very long folder paths can cause problems on Windows.
 2. **Open a terminal inside the project folder.** This is the easiest way, with no typing of paths:
    - **Windows:** in File Explorer, open the unzipped folder (the one containing `package.json`). Click the **address bar**,

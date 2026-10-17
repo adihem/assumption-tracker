@@ -11,8 +11,16 @@
     "human-in-the-loop",
     "assumptions"
   ],
-  "author": "Hemanth Sriram",
+  "author": "adihem",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adihem/assumption-tracker.git"
+  },
+  "homepage": "https://github.com/adihem/assumption-tracker#readme",
+  "bugs": {
+    "url": "https://github.com/adihem/assumption-tracker/issues"
+  },
   "type": "module",
   "engines": {
     "node": ">=22.19.0"
