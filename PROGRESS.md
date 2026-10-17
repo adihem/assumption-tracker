@@ -112,7 +112,7 @@
 
 ## Next: Phase 6 — polish and evaluation
 
-## Phase 6 — Polish and evaluation ✅ (2026-10-17; two human-only items open, see checklist)
+## Phase 6 — Polish and evaluation ✅ (2026-10-17; screen recording still open)
 - `scenarios/annotated-assumptions.json`: 12 scenarios × 3 ambiguities (impact + "counts if" rule), frozen 2026-10-17.
   It replaces `scenarios/attendance-app.md` (now S01).
 - `npm run extract -- <session-id> [scenario-id]`: read-only scoring sheet from a Pi session file
@@ -160,7 +160,7 @@
 | Pi loads extension / agent creates candidate / footer count | ✅ live (Phase 2) |
 | Human reviews; review persists; corrected decision reaches agent | ✅ live (Phases 3, 5) |
 | Restart + branch test | ✅ live (Phases 2–4) |
-| README describes limits and reproduces demo | ✅ agent-run check; **real classmate test to do (human)** |
+| README describes limits and reproduces demo | ✅ classmate test 1 met the gate (docs/README_TEST.md); guide fixed for the 3 findings |
 
 Optional, not required for the MVP: scenarios S06–S12 (results would then be out of 36 instead of 15), and live
 confirmation of the agent-side parts of S4 and S6.

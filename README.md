@@ -41,11 +41,13 @@ are final in v1. Reviewing never starts an agent run by itself.
    describe your plan and technology choices; do not create any files."*
 2. The agent calls `record_assumption`, for example `Recorded A-001 (pending user review)`, and the footer shows `Assumptions: 1 pending`.
    If it records nothing, add one yourself with `/add-assumption`.
-3. Run `/review-assumption A-001`, choose **Correct**, and enter `Use PostgreSQL, because multiple teachers use it at once`.
+3. Run `/assumptions`, pick the item about **data storage** (add one with `/add-assumption` if none), then
+   `/review-assumption <its ID>`, choose **Correct**, and enter `Store the data in PostgreSQL, because multiple teachers use it at once`.
+   Keep the correction on the same topic as the assumption; correcting a "React app" item with a database choice confuses the agent.
 4. Send: *"Continue: describe the data layer, following the reviewed decisions. Do not create files. Stop after this answer."*
    A `[assumption-tracker-decisions]` note appears just before the reply:
    ```text
-   - A-001 CORRECTED: instead of "...", do "Use PostgreSQL, because multiple teachers use it at once".
+   - A-001 CORRECTED: instead of "...", do "Store the data in PostgreSQL, because multiple teachers use it at once".
    Do not treat pending or deferred assumptions as approved.
    ```
    The reply should now use PostgreSQL. In our live check it did (see [PROGRESS.md](PROGRESS.md), Phase 5).

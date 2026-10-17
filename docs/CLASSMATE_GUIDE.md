@@ -9,9 +9,9 @@ This guide takes a new user from an empty computer to a working demo of the Assu
 
 1. **Make the project zip** from the tagged release. Run this inside the `assumption-tracker` folder:
    ```bash
-   git archive --format=zip -o ../assumption-tracker-v1.0.0.zip v1.0.0
+   git archive --format=zip -o ../assumption-tracker.zip HEAD
    ```
-   This gives you a clean copy with no `node_modules` and no Git history. Give the tester the zip and this guide.
+   This zips the latest committed version, with no `node_modules` and no Git history. Give the tester the zip and this guide.
 2. **Sort out a model key.** The tester needs an OpenRouter API key that has some credit, either their own or a throwaway key
    you create for the session with a small spending limit. Free-tier keys often fail with `402` errors (see Part F).
    Never paste your main key into someone else's computer.
@@ -47,13 +47,22 @@ You need **Node.js 22.19 or newer**. Git is not needed.
 
 ## Part C — Tester: get the project and check it works (5 min)
 
-1. **Unzip** `assumption-tracker-v1.0.0.zip` into a short path, for example `C:\Users\<you>\Documents\assumption-tracker`
+1. **Unzip** `assumption-tracker.zip` into a short path, for example `C:\Users\<you>\Documents\assumption-tracker`
    or `~/assumption-tracker`. Very long folder paths can cause problems on Windows.
-2. **Go into the folder** in your terminal. Change the path to wherever you unzipped it:
-   ```bash
-   cd ~/Documents/assumption-tracker
-   ```
-   Run `dir` (Windows) or `ls` (macOS/Linux). You should see `README.md`, `package.json`, `src`, `tests` and `docs`.
+2. **Open a terminal inside the project folder.** This is the easiest way, with no typing of paths:
+   - **Windows:** in File Explorer, open the unzipped folder (the one containing `package.json`). Click the **address bar**,
+     replace the text with `cmd`, and press Enter. A Command Prompt opens already in that folder.
+   - **macOS:** in Finder, right-click the folder → **New Terminal at Folder**. **Linux:** right-click → **Open in Terminal**.
+
+   If you'd rather use `cd`, type the full path, in **quotes** if it contains spaces:
+   - Command Prompt: `cd /d "C:\Users\<you>\Documents\assumption-tracker"` (`~` does **not** work in Command Prompt)
+   - PowerShell: `cd "$HOME\Documents\assumption-tracker"`
+   - macOS/Linux: `cd ~/Documents/assumption-tracker`
+
+   Tip: type `cd ` (with a space), then drag the folder from Explorer/Finder into the terminal window, and press Enter.
+   Note that on some Windows PCs, Documents is inside OneDrive (`C:\Users\<you>\OneDrive\Documents`).
+
+   Check: run `dir` (Windows) or `ls` (macOS/Linux). You should see `README.md`, `package.json`, `src`, `tests` and `docs`.
 3. **Install the dependencies.** This includes the Pi coding agent itself, so it takes 1–2 minutes:
    ```bash
    npm install --ignore-scripts
@@ -120,27 +129,32 @@ Wait for the reply. It can take up to a minute.
 never asked for, for example how data is stored. At the very bottom, the footer should show **`Assumptions: 1 pending`**
 (or a higher number).
 
-If nothing was recorded, add one yourself:
-1. Type `/add-assumption`.
-2. Title: `Use SQLite database`. Description: `Store attendance records in a local SQLite file.` Press Enter to skip the
-   reason, then pick `medium`.
+If the agent hit an error and you sent the message again, that's fine; just continue.
 
-### D3. Look at and correct an assumption
+### D3. Look at and correct the storage assumption
 1. List them:
    ```text
    /assumptions
    ```
    You should see lines like `A-001 | <title> | medium | pending`.
-2. Review the first one:
+2. **Find the one about where data is stored** (database, file, localStorage, "no backend"…) and note its ID. In the steps
+   below it's called **A-00X**; use your real ID.
+   If no recorded item is about storage, add one yourself, and use its new ID:
+   - Type `/add-assumption`. Title: `Use SQLite database`. Description: `Store attendance records in a local SQLite file.`
+     Press Enter to skip the reason, then pick `medium`.
+3. Review it (replace `A-00X` with the real ID):
    ```text
-   /review-assumption A-001
+   /review-assumption A-00X
    ```
    Read the details, choose **Correct**, type the text below and press Enter. Then press Enter again to skip the note.
    ```text
-   Use PostgreSQL, because multiple teachers use it at once
+   Store the data in PostgreSQL, because multiple teachers use it at once
    ```
-   ✅ Expect `A-001 marked corrected. The agent sees this on your next message.` Notice that the agent did **not** start
+   ✅ Expect `A-00X marked corrected. The agent sees this on your next message.` Notice that the agent did **not** start
    working by itself.
+
+   Why this matters: a correction should answer the same question as the assumption. Correcting a "React app" assumption
+   with "use PostgreSQL" confuses the agent, which may read it as "PostgreSQL instead of React".
 
 ### D4. Check that the agent follows your decision
 Send this message exactly:
@@ -148,8 +162,8 @@ Send this message exactly:
 Continue: describe the data layer in more detail, following the reviewed decisions. Do not create files. Stop after this answer.
 ```
 ✅ Just before the agent's reply, a block labelled **`[assumption-tracker-decisions]`** appears, containing
-`A-001 CORRECTED: … do "Use PostgreSQL, because multiple teachers use it at once"`. The reply should now use **PostgreSQL**.
-Write down whether it did.
+`A-00X CORRECTED: … do "Store the data in PostgreSQL, because multiple teachers use it at once"`. The reply should now
+use **PostgreSQL** for storage. Write down whether it did.
 
 > Tip: don't send a bare "ok" to the agent; it may take that as permission to start writing files. If it ever starts
 > creating files you didn't ask for, press **Esc** to stop it.
@@ -161,11 +175,14 @@ Write down whether it did.
    npm run pi -- -c
    ```
 3. Type `/assumptions all`.
-   ✅ A-001 is still shown as **corrected**, with `Corrected to: Use PostgreSQL…`.
+   ✅ A-00X is still shown as **corrected**, with `Corrected to: Store the data in PostgreSQL…`.
 
 ### D6. (Optional) Go back in time
-1. Type `/tree`, select your **first** message (the attendance-tracker request), and press Enter.
-2. Type `/assumptions all`. ✅ On this earlier branch, A-001 is **pending** again, because the correction happened later.
+1. Type `/tree`. Select the **agent's plan reply**: the reply right after the `Recorded A-…` line, which comes *before* your
+   correction. Press Enter.
+   Do not pick a message from before anything was recorded, such as a first attempt that failed with an error. On that
+   branch nothing exists yet, so the list is correctly empty.
+2. Type `/assumptions all`. ✅ On this earlier branch, A-00X is **pending** again, because the correction happened later.
 3. Exit Pi (Ctrl+D).
 
 ### D7. Answer two questions
@@ -185,7 +202,7 @@ Answer without asking anyone. You may use `/assumptions-help` or the README.
 | Part C: `npm test` 71 passed / `SMOKE OK` / `E2E OK` | yes / no / no |
 | D1: logged in, `/tracker-hello` says active | yes / no |
 | D2: saw `Recorded A-…` and the footer count (or added one manually) | recorded / manual |
-| D3: corrected A-001 | yes / no |
+| D3: corrected the storage assumption (which ID?) | yes / no — ID: |
 | D4: saw the `[assumption-tracker-decisions]` block | yes / no |
 | D4: reply followed the correction (PostgreSQL) | yes / no |
 | D5: correction still there after restart | yes / no |
