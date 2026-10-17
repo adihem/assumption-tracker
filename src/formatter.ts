@@ -1,4 +1,3 @@
-// Plain-text views of tracker state. Readable without color; assumption text is shown as data, never interpreted.
 import { countByStatus } from "./state.ts";
 import type { Assumption, Status, TrackerState } from "./types.ts";
 
@@ -20,7 +19,6 @@ export function truncate(text: string, max: number): string {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
 }
 
-/** Footer text, e.g. "Assumptions: 2 pending, 1 deferred". Undefined clears the footer when nothing awaits review. */
 export function statusText(state: TrackerState): string | undefined {
   const { pending, deferred } = countByStatus(state);
   if (pending === 0 && deferred === 0) return undefined;
@@ -29,12 +27,10 @@ export function statusText(state: TrackerState): string | undefined {
   return `Assumptions: ${parts.join(", ")}`;
 }
 
-/** Short selector label, e.g. "A-001 — Use SQLite (pending, medium)". */
 export function reviewLabel(a: Assumption): string {
   return `${a.id} — ${a.title} (${a.status}, ${a.impact})`;
 }
 
-/** Full stored text, shown while reviewing. */
 export function detailText(a: Assumption): string {
   const lines = [
     `${a.id}: ${a.title}`,
@@ -69,10 +65,6 @@ function decisionLine(a: Assumption): string {
   return `- ${a.id} ACCEPTED: ${quote(a.title)} is approved.${note}`;
 }
 
-/**
- * Model-facing summary of accepted/corrected/rejected items, newest decision first, capped at DECISION_CONTEXT_MAX
- * characters. Undefined when nothing has been reviewed. Pending and deferred items are never presented as approved.
- */
 export function decisionContext(state: TrackerState): string | undefined {
   const decided = [...state.assumptions.values()]
     .filter((a) => a.status === "accepted" || a.status === "corrected" || a.status === "rejected")
@@ -80,7 +72,7 @@ export function decisionContext(state: TrackerState): string | undefined {
   if (decided.length === 0) return undefined;
 
   const lines = [DECISION_HEADER];
-  let length = DECISION_HEADER.length + DECISION_FOOTER.length + 80; // room for the footer and an omission line
+  let length = DECISION_HEADER.length + DECISION_FOOTER.length + 80;
   let shown = 0;
   for (const a of decided) {
     const line = decisionLine(a);
@@ -94,7 +86,6 @@ export function decisionContext(state: TrackerState): string | undefined {
   return lines.join("\n");
 }
 
-/** List for /assumptions: unresolved items by default, everything with `all`. Unresolved first, then by ID. */
 export function listText(state: TrackerState, all: boolean): string {
   const items = [...state.assumptions.values()];
   if (items.length === 0) return "No assumptions recorded in this session branch.";

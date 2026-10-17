@@ -90,10 +90,10 @@ describe("decisionContext", () => {
     }
     const text = decisionContext(s)!;
     expect(text.length).toBeLessThanOrEqual(1500);
-    expect(text).toContain("- A-030 CORRECTED"); // newest kept
-    expect(text).not.toContain("- A-001 CORRECTED"); // oldest dropped
+    expect(text).toContain("- A-030 CORRECTED");
+    expect(text).not.toContain("- A-001 CORRECTED");
     expect(text).toMatch(/- \d+ older decisions omitted for length\./);
-    expect(decisionContext(s)).toBe(text); // stable output
+    expect(decisionContext(s)).toBe(text);
   });
 });
 

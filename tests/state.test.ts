@@ -46,7 +46,7 @@ describe("create", () => {
 
   it("rejects a reused ID and a non-pending new item", () => {
     const state = oneItem();
-    const reused = buildCreatedEvent(createEmptyState(), login, "agent", T0); // also A-001
+    const reused = buildCreatedEvent(createEmptyState(), login, "agent", T0);
     expect(checkEvent(state, reused)).toMatch(/already exists/);
     expect(applyEvent(state, reused)).toBe(state);
 
@@ -75,7 +75,7 @@ describe("findDuplicate", () => {
     const state = applyEvent(oneItem(), buildReviewedEvent("A-001", "rejected", T1));
     expect(findDuplicate(state, sqlite)).toBeUndefined();
     expect(findRejectedMatch(state, { ...sqlite, title: "USE sqlite  database" })?.id).toBe("A-001");
-    expect(findRejectedMatch(oneItem(), sqlite)).toBeUndefined(); // pending match is a duplicate, not "related"
+    expect(findRejectedMatch(oneItem(), sqlite)).toBeUndefined();
   });
 });
 
@@ -158,8 +158,8 @@ describe("replayEvents", () => {
       events[0],
       null,
       { version: 2, event: "created", assumption: events[1] },
-      buildReviewedEvent("A-404", "accepted", T1), // unknown ID
-      events[0], // duplicate create
+      buildReviewedEvent("A-404", "accepted", T1),
+      events[0],
       events[1],
     ]);
     expect(skipped).toBe(4);

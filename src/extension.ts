@@ -76,10 +76,6 @@ export default function assumptionTracker(pi: ExtensionAPI) {
     refreshStatus(ctx);
   };
 
-  /**
-   * Validate → duplicate check → persist → commit. Synchronous from read to write, so concurrent
-   * tool calls cannot interleave (plan §9.9). If appendEntry throws, in-memory state is left unchanged.
-   */
   const record = (input: Record<string, unknown>, origin: Origin): RecordResult => {
     const valid = validateNewAssumption(input);
     if (!valid.ok) throw new Error(`Assumption not recorded: ${valid.errors.join(" ")}`);
@@ -95,8 +91,6 @@ export default function assumptionTracker(pi: ExtensionAPI) {
   pi.on("session_start", (_event, ctx) => restore(ctx));
   pi.on("session_tree", (_event, ctx) => restore(ctx));
 
-  // Tell the agent about human decisions at the start of a user-started run (plan §9.7). Only when the summary
-  // changed since the copy still in context, so it is not repeated every turn. This never starts a run by itself.
   pi.on("before_agent_start", (event, ctx) => {
     if (event.messageType !== "user") return;
     const summary = decisionContext(state);
@@ -133,7 +127,6 @@ export default function assumptionTracker(pi: ExtensionAPI) {
     },
   });
 
-  /** Check → persist → commit, for review events. Returns an error message, or undefined on success. */
   const commit = (event: ReviewedEvent): string | undefined => {
     const error = checkEvent(state, event);
     if (error) return error;
@@ -144,14 +137,12 @@ export default function assumptionTracker(pi: ExtensionAPI) {
 
   const unsavedNote = (ctx: ExtensionContext) => (hasConversation(ctx.sessionManager) ? "" : NOT_YET_SAVED_WARNING);
 
-  /** Without dialog-capable UI, explain on stderr (keeps JSON/print stdout clean) and do nothing. */
   const requireUI = (ctx: ExtensionContext, command: string): boolean => {
     if (ctx.hasUI) return true;
     console.error(`/${command} needs an interactive Pi session (TUI or RPC); nothing was changed.`);
     return false;
   };
 
-  /** Asks for replacement text until it is valid; undefined means the user cancelled. */
   const askCorrection = async (ctx: ExtensionContext, id: string): Promise<string | undefined> => {
     for (;;) {
       const text = await ctx.ui.input(`Correct ${id}: what should be done instead?`, "e.g. Use PostgreSQL instead");

@@ -1,6 +1,3 @@
-// Read-only: summarize one Pi session file as a Markdown scoring sheet for docs/EVALUATION.md.
-// Usage: npm run extract -- <session-id | path.jsonl> [scenario-id]
-// Matching recorded items to annotated ambiguities stays a human judgement; this only gathers the facts.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";

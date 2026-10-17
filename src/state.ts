@@ -1,4 +1,3 @@
-// Pure tracker state: no Pi imports, no I/O. Every function returns new values and never mutates its inputs.
 import {
   type Assumption,
   type CreatedEvent,
@@ -22,16 +21,10 @@ export function nextId(state: TrackerState): string {
   return `A-${String(state.nextNumber).padStart(3, "0")}`;
 }
 
-/**
- * Existing non-rejected item whose normalized title or description equals the candidate's.
- * Rejected items are never matched, so a re-raised rejected idea becomes a new item.
- * ponytail: exact normalized match only; add fuzzy/semantic matching if real duplicates slip through.
- */
 export function findDuplicate(state: TrackerState, candidate: NewAssumption): Assumption | undefined {
   return findMatch(state, candidate, (a) => a.status !== "rejected");
 }
 
-/** A rejected item matching the candidate, reported as "possibly related" rather than merged (plan §7.6). */
 export function findRejectedMatch(state: TrackerState, candidate: NewAssumption): Assumption | undefined {
   return findMatch(state, candidate, (a) => a.status === "rejected");
 }
@@ -45,7 +38,6 @@ function findMatch(state: TrackerState, candidate: NewAssumption, include: (a: A
   return undefined;
 }
 
-/** Builds a "created" event for an already-validated candidate. Does not change state. */
 export function buildCreatedEvent(state: TrackerState, input: NewAssumption, origin: Origin, now: string): CreatedEvent {
   return {
     version: 1,
@@ -54,7 +46,6 @@ export function buildCreatedEvent(state: TrackerState, input: NewAssumption, ori
   };
 }
 
-/** Builds a "reviewed" event with normalized text; run checkEvent before persisting it. */
 export function buildReviewedEvent(
   id: string,
   status: ReviewStatus,
@@ -68,7 +59,6 @@ export function buildReviewedEvent(
   return event;
 }
 
-/** Returns why the event cannot be applied to this state, or undefined if it can. */
 export function checkEvent(state: TrackerState, event: TrackerEvent): string | undefined {
   return event.event === "created" ? checkCreated(state, event) : checkReviewed(state, event);
 }
@@ -97,7 +87,6 @@ function checkReviewed(state: TrackerState, e: ReviewedEvent): string | undefine
   return e.reviewNote === undefined ? undefined : checkText("reviewNote", e.reviewNote);
 }
 
-/** Applies a valid event. An invalid event returns the same state unchanged (good state is never overwritten). */
 export function applyEvent(state: TrackerState, event: TrackerEvent): TrackerState {
   if (checkEvent(state, event) !== undefined) return state;
   const assumptions = new Map(state.assumptions);
@@ -107,7 +96,6 @@ export function applyEvent(state: TrackerState, event: TrackerEvent): TrackerSta
     const n = Number(ID_PATTERN.exec(a.id)![1]);
     return { assumptions, nextNumber: Math.max(state.nextNumber, n + 1) };
   }
-  // Reviewable items are pending/deferred, so they never carry an old correction; a note from deferring is kept.
   const updated: Assumption = { ...assumptions.get(event.id)!, status: event.status, updatedAt: event.timestamp };
   if (event.correction !== undefined) updated.correction = event.correction;
   if (event.reviewNote !== undefined) updated.reviewNote = event.reviewNote;
@@ -115,7 +103,6 @@ export function applyEvent(state: TrackerState, event: TrackerEvent): TrackerSta
   return { assumptions, nextNumber: state.nextNumber };
 }
 
-/** Replays raw persisted entries in order. Malformed, unknown-version, or inapplicable entries are skipped and counted. */
 export function replayEvents(rawEvents: readonly unknown[]): { state: TrackerState; skipped: number } {
   let state = createEmptyState();
   let skipped = 0;
@@ -130,7 +117,6 @@ export function replayEvents(rawEvents: readonly unknown[]): { state: TrackerSta
   return { state, skipped };
 }
 
-/** Pending and deferred items, in ID order. */
 export function awaitingReview(state: TrackerState): Assumption[] {
   return [...state.assumptions.values()]
     .filter((a) => a.status === "pending" || a.status === "deferred")

@@ -1,6 +1,3 @@
-// Headless end-to-end check of the review commands in real Pi, with no reachable model (see no-model-env.mjs).
-// RPC mode: add three items, accept one (S1), defer then correct one (S3), reject one (S4), list them.
-// Print mode (no UI, S10): each command must answer on stderr without opening a dialog.
 import { spawn, spawnSync } from "node:child_process";
 import { createInterface } from "node:readline";
 import { EXTENSION_ARGS, noModelEnv, PI_CLI } from "./no-model-env.mjs";
@@ -8,7 +5,6 @@ import { EXTENSION_ARGS, noModelEnv, PI_CLI } from "./no-model-env.mjs";
 const env = noModelEnv();
 const results = {};
 
-// ---- RPC: interactive flow with scripted dialog answers ----
 const steps = [
   { prompt: "/add-assumption", replies: ["Use SQLite database", "Store attendance records in a local SQLite file.", "", "medium"] },
   { prompt: "/add-assumption", replies: ["No authentication", "Anyone can mark attendance without logging in.", "", "high"] },
@@ -17,7 +13,7 @@ const steps = [
   { prompt: "/review-assumption A-002", replies: ["Defer", "Ask the teachers"] },
   { prompt: "/review-assumption A-002", replies: ["Correct", "Teachers log in with a password", ""] },
   { prompt: "/review-assumption A-003", replies: ["Reject", ""] },
-  { prompt: "/review-assumption A-003", replies: [] }, // final item: must refuse without dialogs
+  { prompt: "/review-assumption A-003", replies: [] },
   { prompt: "/assumptions all", replies: [] },
 ];
 const replies = steps.flatMap((s) => s.replies);
@@ -65,7 +61,6 @@ Object.assign(results, {
   "all replies used": replies.length === 0,
 });
 
-// ---- Print mode: no UI (S10) ----
 for (const [command, expected] of [
   ["/assumptions", "No assumptions recorded in this session branch."],
   ["/review-assumption A-001", "/review-assumption needs an interactive Pi session"],

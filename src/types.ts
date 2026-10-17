@@ -10,7 +10,6 @@ export type Status = (typeof STATUSES)[number];
 export type ReviewStatus = Exclude<Status, "pending">;
 export type Origin = (typeof ORIGINS)[number];
 
-/** [min, max] character lengths after whitespace normalization. */
 export const LIMITS = {
   title: [3, 80],
   description: [10, 500],
@@ -20,20 +19,19 @@ export const LIMITS = {
 } as const;
 
 export interface Assumption {
-  id: string; // "A-001", assigned locally
+  id: string;
   title: string;
   description: string;
   reason: string;
-  impact: Impact; // agent-proposed, not verified severity
-  status: Status; // only the user can move it out of "pending"
+  impact: Impact;
+  status: Status;
   origin: Origin;
-  createdAt: string; // ISO-8601 UTC
-  updatedAt: string; // ISO-8601 UTC
-  correction?: string; // required when status is "corrected"
+  createdAt: string;
+  updatedAt: string;
+  correction?: string;
   reviewNote?: string;
 }
 
-/** Input for a new candidate, from the agent tool or the user. */
 export interface NewAssumption {
   title: string;
   description: string;
@@ -55,5 +53,5 @@ export type TrackerEvent = CreatedEvent | ReviewedEvent;
 
 export interface TrackerState {
   assumptions: ReadonlyMap<string, Assumption>;
-  nextNumber: number; // next free numeric part of an ID
+  nextNumber: number;
 }

@@ -1,4 +1,3 @@
-// Session-branch behaviour against Pi's real SessionManager tree (in memory, no model).
 import { SessionManager } from "@earendil-works/pi-coding-agent";
 import { describe, expect, it } from "vitest";
 import assumptionTracker from "../src/extension.ts";
@@ -11,7 +10,6 @@ const sqlite = {
 };
 const auth = { title: "No authentication", description: "Anyone can mark attendance without logging in.", impact: "high" };
 
-/** One extension runtime wired to a real SessionManager; `ctx.sessionManager` can be swapped like Pi does on /new or /resume. */
 function harness(sm = SessionManager.inMemory("/project")) {
   const handlers = new Map<string, (event: unknown, ctx: unknown) => unknown>();
   const commands = new Map<string, any>();
@@ -46,7 +44,6 @@ function harness(sm = SessionManager.inMemory("/project")) {
     get sm(): SessionManager {
       return ctx.sessionManager;
     },
-    /** Agent tool call; returns the assigned ID and the session entry it created (if any). */
     async record(params: Record<string, unknown>) {
       const before = ctx.sessionManager.getLeafId();
       const result = await tool.execute("call", params, undefined, undefined, ctx);
@@ -62,12 +59,10 @@ function harness(sm = SessionManager.inMemory("/project")) {
       await commands.get("assumptions").handler("all", ctx);
       return notifications.at(-1)!;
     },
-    /** Like Pi's /tree: move the leaf, then fire session_tree. */
     navigate(entryId: string) {
       ctx.sessionManager.branch(entryId);
       handlers.get("session_tree")!({ type: "session_tree" }, ctx);
     },
-    /** Like Pi starting a run: fire before_agent_start, then persist any returned message as Pi does. */
     async startRun(messageType: "user" | "custom" = "user") {
       const result: any = await handlers.get("before_agent_start")!(
         { type: "before_agent_start", messageType, prompt: "continue", systemPrompt: "", systemPromptOptions: {} },
@@ -80,7 +75,6 @@ function harness(sm = SessionManager.inMemory("/project")) {
       }
       return result?.message as { customType: string; content: string; display: boolean } | undefined;
     },
-    /** Like /new, /resume or /fork: a different session manager, then session_start. */
     switchTo(next: SessionManager, reason = "resume") {
       ctx.sessionManager = next;
       handlers.get("session_start")!({ type: "session_start", reason }, ctx);
@@ -95,12 +89,12 @@ describe("branch navigation (session_tree)", () => {
     const reviewed = await h.review("A-001", ["Correct", "Use PostgreSQL", ""]);
     expect(await h.list()).toContain("Corrected to: Use PostgreSQL");
 
-    h.navigate(created!); // before the review
+    h.navigate(created!);
     const before = await h.list();
     expect(before).toContain("A-001 | Use SQLite database | medium | pending");
     expect(before).not.toContain("PostgreSQL");
 
-    h.navigate(reviewed); // back to the original branch
+    h.navigate(reviewed);
     expect(await h.list()).toContain("A-001 | Use SQLite database | medium | corrected");
   });
 
@@ -110,23 +104,23 @@ describe("branch navigation (session_tree)", () => {
     const corrected = await h.review("A-001", ["Correct", "Use PostgreSQL", ""]);
 
     h.navigate(created!);
-    const rejected = await h.review("A-001", ["Reject", ""]); // allowed: on this branch A-001 is still pending
+    const rejected = await h.review("A-001", ["Reject", ""]);
     expect(await h.list()).toContain("| rejected");
 
     h.navigate(corrected);
     expect(await h.list()).toContain("| corrected");
     h.navigate(rejected);
     expect(await h.list()).toContain("| rejected");
-    expect(h.sm.getEntries().filter((e: any) => e.data?.event === "reviewed")).toHaveLength(2); // both kept in the file
+    expect(h.sm.getEntries().filter((e: any) => e.data?.event === "reviewed")).toHaveLength(2);
   });
 
   it("assigns IDs and detects duplicates from the active branch only", async () => {
     const h = harness();
     const { entryId: first } = await h.record(sqlite);
-    await h.record(auth); // A-002 on the original branch
+    await h.record(auth);
 
     h.navigate(first!);
-    expect(await h.record(auth)).toMatchObject({ id: "A-002", duplicate: false }); // A-002 does not exist on this branch
+    expect(await h.record(auth)).toMatchObject({ id: "A-002", duplicate: false });
     expect(await h.record(sqlite)).toMatchObject({ id: "A-001", duplicate: true });
     expect(await h.list()).toMatch(/2 pending/);
   });
@@ -184,7 +178,7 @@ describe("session switches (session_start)", () => {
     const count = h.sm.getEntries().length;
     h.navigate(h.sm.appendCustomEntry("other-extension", {}));
     h.switchTo(h.sm);
-    expect(h.sm.getEntries().length).toBe(count + 1); // only the entry the test itself added
+    expect(h.sm.getEntries().length).toBe(count + 1);
   });
 });
 
@@ -192,7 +186,7 @@ describe("decision context for the agent (before_agent_start)", () => {
   it("injects nothing until a decision exists, then the corrected decision on the next user run", async () => {
     const h = harness();
     await h.record(sqlite);
-    expect(await h.startRun()).toBeUndefined(); // only pending: nothing approved to report
+    expect(await h.startRun()).toBeUndefined();
     await h.review("A-001", ["Correct", "Use PostgreSQL", ""]);
 
     const message = await h.startRun();
@@ -206,12 +200,12 @@ describe("decision context for the agent (before_agent_start)", () => {
     await h.record(auth);
     await h.review("A-001", ["Accept", ""]);
     expect(await h.startRun()).toBeDefined();
-    expect(await h.startRun()).toBeUndefined(); // same summary already in context
+    expect(await h.startRun()).toBeUndefined();
 
     await h.review("A-002", ["Reject", ""]);
     const updated = await h.startRun();
     expect(updated!.content).toContain("A-002 REJECTED");
-    expect(updated!.content).toContain("A-001 ACCEPTED"); // full current list, not just the change
+    expect(updated!.content).toContain("A-001 ACCEPTED");
   });
 
   it("ignores runs started by custom messages", async () => {
@@ -227,10 +221,10 @@ describe("decision context for the agent (before_agent_start)", () => {
     await h.review("A-001", ["Correct", "Use PostgreSQL", ""]);
     expect(await h.startRun()).toBeDefined();
 
-    h.navigate(created!); // before the review: nothing to report
+    h.navigate(created!);
     expect(await h.startRun()).toBeUndefined();
 
-    await h.review("A-001", ["Reject", ""]); // a different decision on this branch
+    await h.review("A-001", ["Reject", ""]);
     expect((await h.startRun())!.content).toContain("A-001 REJECTED");
   });
 
@@ -240,6 +234,6 @@ describe("decision context for the agent (before_agent_start)", () => {
     const before = h.sm.getEntries().length;
     await h.review("A-001", ["Accept", ""]);
     const added = h.sm.getEntries().slice(before).map((e: any) => e.type);
-    expect(added).toEqual(["custom"]); // only the review event; no message, no run
+    expect(added).toEqual(["custom"]);
   });
 });

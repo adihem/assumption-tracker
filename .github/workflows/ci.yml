@@ -23,6 +23,5 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run typecheck
       - run: npm test
-      # Real Pi in RPC/print mode with no reachable model (scripts/no-model-env.mjs); no secrets needed.
       - run: npm run smoke
       - run: npm run e2e

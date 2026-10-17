@@ -8,7 +8,7 @@ persistent**. The agent can report a *candidate assumption*, for example "Use SQ
 You review it whenever you like (accept, correct, defer or reject), and your decision reaches the agent on your next message.
 
 Recorded items are **agent-reported candidates, not detected facts**. The tracker informs the agent but does not enforce
-decisions or undo code. See [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md).
+decisions or undo code. Models can miss assumptions, so `/add-assumption` lets you record ones the agent didn't.
 
 ## Quick start
 Requirements: Node.js 22.19+ (tested on 26.3.0), npm, and Git. Pi is installed as a project dependency
@@ -83,7 +83,6 @@ Tip: end follow-ups with an explicit "stop after this answer". A bare "ok" may b
 - Pi writes a new session to disk only after its first chat message. Items added before that are lost on exit, and the
   commands warn you.
 
-Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Original spec: [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md).
 Build log per phase: [PROGRESS.md](PROGRESS.md).
 
 ## Scripts
@@ -102,8 +101,7 @@ Build log per phase: [PROGRESS.md](PROGRESS.md).
 
 ## Evaluation
 There are 12 scenarios with pre-annotated ambiguities in [scenarios/annotated-assumptions.json](scenarios/annotated-assumptions.json).
-Protocol, metrics, pilot results and the empty results table are in [docs/EVALUATION.md](docs/EVALUATION.md). Test coverage and
-manual scenario status are in [docs/TEST_PLAN.md](docs/TEST_PLAN.md). A first-run check of this README is in [docs/README_TEST.md](docs/README_TEST.md). To run a classmate test, follow [docs/CLASSMATE_GUIDE.md](docs/CLASSMATE_GUIDE.md).
+Run each with `npm run pi:baseline` and `npm run pi`, then score the session with `npm run extract -- <session-id> <scenario-id>`.
 
 ## Layout
 ```text
@@ -112,7 +110,6 @@ src/            types, validation, state (pure), persistence, formatter, extensi
 tests/          vitest suites (no model needed)
 scripts/        smoke, e2e, extract-session
 scenarios/      evaluation prompts + annotations
-docs/           architecture, evaluation, test plan, limitations, original plan
 ```
 
 ## Privacy
@@ -121,5 +118,5 @@ them. To remove a test session, delete its `.jsonl` file there. The extension ma
 Pi's own, sent to the provider you configure.
 
 ## License
-[MIT](LICENSE) © 2026 adihem. The original specification is in [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md).
+[MIT](LICENSE) © 2026 adihem.
 Continuous integration (`.github/workflows/ci.yml`) runs typecheck, tests, smoke and e2e on Ubuntu and Windows with no model or secrets.

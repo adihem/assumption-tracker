@@ -11,17 +11,14 @@ import {
 
 export type Result<T> = { ok: true; value: T } | { ok: false; errors: string[] };
 
-/** Trim and collapse runs of whitespace to one space. */
 export function normalizeText(text: string): string {
   return text.trim().replace(/\s+/g, " ");
 }
 
-/** Normalized + lowercased, for duplicate comparison. */
 export function comparableText(text: string): string {
   return normalizeText(text).toLowerCase();
 }
 
-/** Returns an error message, or undefined when the value fits the field's limits. */
 export function checkText(field: keyof typeof LIMITS, value: unknown): string | undefined {
   if (typeof value !== "string") return `${field} must be text.`;
   const [min, max] = LIMITS[field];
@@ -34,7 +31,6 @@ export function checkText(field: keyof typeof LIMITS, value: unknown): string | 
 const isOneOf = <T extends string>(options: readonly T[], value: unknown): value is T =>
   typeof value === "string" && (options as readonly string[]).includes(value);
 
-/** Validates and normalizes a new candidate. Never modifies state. */
 export function validateNewAssumption(input: Record<string, unknown>): Result<NewAssumption> {
   const errors = [
     checkText("title", input.title),
@@ -74,7 +70,6 @@ function isAssumption(v: unknown): v is Assumption {
   );
 }
 
-/** Shape check for persisted data. Returns undefined for malformed or unknown-version entries. */
 export function parseEvent(raw: unknown): TrackerEvent | undefined {
   if (!isObject(raw) || raw.version !== EVENT_VERSION) return undefined;
   if (raw.event === "created") return isAssumption(raw.assumption) ? (raw as TrackerEvent) : undefined;

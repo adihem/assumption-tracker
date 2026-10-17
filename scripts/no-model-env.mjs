@@ -1,5 +1,3 @@
-// Environment for running real Pi with no reachable model: an empty, throwaway config dir (no saved logins) and
-// every credential-like or provider variable removed. Used by the headless checks so they can never call a model.
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

@@ -1,6 +1,3 @@
-// Headless check: start Pi in RPC mode with the extension, run /tracker-hello, expect its notification
-// (which also confirms the record_assumption tool is active).
-// No model or login needed: extension commands are handled locally.
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 import { EXTENSION_ARGS, noModelEnv, PI_CLI } from "./no-model-env.mjs";
