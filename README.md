@@ -1,7 +1,13 @@
 # Assumption Tracker (Pi extension)
 
 Pi coding agent extension that records agent-reported assumptions for human review.
-Status: **Phase 0** — only `/tracker-hello` exists.
+Status: **Phase 1** — `/tracker-hello` plus the pure domain logic (`src/types.ts`, `src/validation.ts`, `src/state.ts`), with unit tests.
+Not yet connected to Pi: there is no tool or review command yet.
+
+## Tests
+```bash
+npm test
+```
 
 ## Requirements
 - Node.js 22.19+ (tested on 26.3.0), npm, Git

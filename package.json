@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "pi": "pi -na -e ./.pi/extensions/assumption-tracker.ts",
     "smoke": "node scripts/smoke.mjs"
