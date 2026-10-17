@@ -90,7 +90,7 @@
   - The return-to-latest step was not done manually; it is covered by the branching tests.
   - Observation for Phase 5: typing "Use PostgreSQL" as chat confused the agent. It has no view of tracker decisions yet.
 
-## Phase 5 — Inform the agent of review decisions ✅ automated / ⏳ live agent check (2026-10-17)
+## Phase 5 — Inform the agent of review decisions ✅ (2026-10-17)
 - `before_agent_start`: only for `messageType === "user"`. Returns one custom message
   (`assumption-tracker-decisions`, `display: true`) with `decisionContext(state)`. It never starts a run.
 - No repetition: a summary is sent only if it differs from the newest copy in `buildContextEntries()`, which is branch- and
@@ -100,6 +100,14 @@
   pending or deferred as approved".
 - Tests: 70 passing (+4 formatter, +5 event tests on the real SessionManager). Mutation checks: dropping the messageType
   guard or the dedup check each fails a test.
-- Pending: live check that the agent follows a correction (needs a model).
+- Live check ✅ (2026-10-17, session 01a14ab3, `thinkingmachines/inkling:free`, thinking medium):
+  - The agent recorded A-001 ("in-memory web app", impact low). The user corrected it to "Use PostgreSQL, because multiple
+    teachers use it at once". No run started on review.
+  - On the next user message, exactly one `assumption-tracker-decisions` entry (384 chars) was injected and shown.
+    The reply described a PostgreSQL data layer, explicitly citing "corrected A-001". Correction uptake: 1/1.
+  - The following `ok` run had no second injection (dedup works). That `ok` was read as approval to implement: the agent ran `ls` and
+    read `package.json` before the user aborted; no files were written (`git status` clean). Lesson for the evaluation
+    scripts: end with an explicit "stop here" instead of an ambiguous "ok".
+  - The optional `/tree` step was not done; it is covered by the branching tests.
 
 ## Next: Phase 6 — polish and evaluation
