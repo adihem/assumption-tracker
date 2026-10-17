@@ -270,6 +270,18 @@ describe("review commands", () => {
     expect(reviewEvents(m.branch)).toEqual([]);
   });
 
+  it("re-reporting a rejected item creates a new pending item flagged as possibly related", async () => {
+    const m = await withOne();
+    await m.run("review-assumption", "A-001", ["Reject", ""]);
+    const again = await m.call(sqlite);
+    expect(again.details).toEqual({ id: "A-002", duplicate: false });
+    expect(text(again)).toBe(
+      "Recorded A-002 (pending user review). This is not user approval; continue with the task. " +
+        "Possibly related to A-001, which the user rejected; do not act on this without asking the user.",
+    );
+    expect(text(await m.call({ ...sqlite, title: "Use REST API", description: "Expose a JSON REST API." }))).not.toMatch(/Possibly related/);
+  });
+
   it("a reviewed decision survives resume", async () => {
     const m = await withOne();
     await m.run("review-assumption", "A-001", ["Correct", "Use PostgreSQL", ""]);

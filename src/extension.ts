@@ -17,6 +17,7 @@ import {
   checkEvent,
   createEmptyState,
   findDuplicate,
+  findRejectedMatch,
 } from "./state.ts";
 import {
   ASSUMPTION_ENTRY_TYPE,
@@ -55,7 +56,9 @@ const RecordParams = Type.Object({
   impact: StringEnum(IMPACTS, { description: "Your proposed impact if the user disagrees with this choice." }),
 });
 
-export type RecordResult = { recorded: true; assumption: Assumption } | { recorded: false; existing: Assumption };
+export type RecordResult =
+  | { recorded: true; assumption: Assumption; relatedRejected?: Assumption }
+  | { recorded: false; existing: Assumption };
 
 export default function assumptionTracker(pi: ExtensionAPI) {
   let state: TrackerState = createEmptyState();
@@ -82,10 +85,11 @@ export default function assumptionTracker(pi: ExtensionAPI) {
     if (!valid.ok) throw new Error(`Assumption not recorded: ${valid.errors.join(" ")}`);
     const existing = findDuplicate(state, valid.value);
     if (existing) return { recorded: false, existing };
+    const relatedRejected = findRejectedMatch(state, valid.value);
     const event = buildCreatedEvent(state, valid.value, origin, new Date().toISOString());
     pi.appendEntry(ASSUMPTION_ENTRY_TYPE, event);
     state = applyEvent(state, event);
-    return { recorded: true, assumption: event.assumption };
+    return { recorded: true, assumption: event.assumption, relatedRejected };
   };
 
   pi.on("session_start", (_event, ctx) => restore(ctx));
@@ -122,6 +126,9 @@ export default function assumptionTracker(pi: ExtensionAPI) {
         ? `Recorded ${a.id} (pending user review). This is not user approval; continue with the task.`
         : `Already recorded as ${a.id} (status: ${a.status}); not recorded again.`;
       if (!result.recorded && a.status === "corrected") text += ` The user corrected it to: ${a.correction}`;
+      if (result.recorded && result.relatedRejected) {
+        text += ` Possibly related to ${result.relatedRejected.id}, which the user rejected; do not act on this without asking the user.`;
+      }
       return { content: [{ type: "text", text }], details: { id: a.id, duplicate: !result.recorded } };
     },
   });
@@ -211,7 +218,10 @@ export default function assumptionTracker(pi: ExtensionAPI) {
       return ctx.ui.notify(error instanceof Error ? error.message : String(error), "error");
     }
     refreshStatus(ctx);
-    if (result.recorded) ctx.ui.notify(`Added ${result.assumption.id} (pending). Review it with /review-assumption.${unsavedNote(ctx)}`, "info");
+    if (result.recorded) {
+      const related = result.relatedRejected ? ` Possibly related to rejected ${result.relatedRejected.id}.` : "";
+      ctx.ui.notify(`Added ${result.assumption.id} (pending). Review it with /review-assumption.${related}${unsavedNote(ctx)}`, "info");
+    }
     else ctx.ui.notify(`Already recorded as ${result.existing.id} (${result.existing.status}); nothing added.`, "warning");
   };
 
@@ -250,9 +260,10 @@ export default function assumptionTracker(pi: ExtensionAPI) {
   pi.registerCommand("tracker-hello", {
     description: "Check that the Assumption Tracker extension is loaded",
     handler: async (_args, ctx) => {
-      if (!ctx.hasUI) return;
       const active = pi.getActiveTools().includes("record_assumption");
-      ctx.ui.notify(`Assumption Tracker loaded. record_assumption tool: ${active ? "active" : "NOT active"}.`, "info");
+      const text = `Assumption Tracker loaded. record_assumption tool: ${active ? "active" : "NOT active"}.`;
+      if (ctx.hasUI) ctx.ui.notify(text, "info");
+      else console.error(text);
     },
   });
 }

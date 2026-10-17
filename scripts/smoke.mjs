@@ -3,13 +3,13 @@
 // No model or login needed: extension commands are handled locally.
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
+import { EXTENSION_ARGS, noModelEnv, PI_CLI } from "./no-model-env.mjs";
 
 const EXPECTED_COMMANDS = ["tracker-hello", "assumptions", "review-assumption", "add-assumption", "assumptions-help"];
-const cli ="node_modules/@earendil-works/pi-coding-agent/dist/bundle/cli.js";
 const pi = spawn(
   process.execPath,
-  [cli, "-na", "--offline", "--no-session", "-e", "./.pi/extensions/assumption-tracker.ts", "--mode", "rpc"],
-  { stdio: ["pipe", "pipe", "inherit"] },
+  [PI_CLI, ...EXTENSION_ARGS, "--no-session", "--mode", "rpc"],
+  { env: noModelEnv(), stdio: ["pipe", "pipe", "inherit"] },
 );
 const seen = { registered: false, notified: false, handled: false };
 const ok = () => seen.registered && seen.notified && seen.handled;

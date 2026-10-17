@@ -28,11 +28,19 @@ export function nextId(state: TrackerState): string {
  * ponytail: exact normalized match only; add fuzzy/semantic matching if real duplicates slip through.
  */
 export function findDuplicate(state: TrackerState, candidate: NewAssumption): Assumption | undefined {
+  return findMatch(state, candidate, (a) => a.status !== "rejected");
+}
+
+/** A rejected item matching the candidate, reported as "possibly related" rather than merged (plan §7.6). */
+export function findRejectedMatch(state: TrackerState, candidate: NewAssumption): Assumption | undefined {
+  return findMatch(state, candidate, (a) => a.status === "rejected");
+}
+
+function findMatch(state: TrackerState, candidate: NewAssumption, include: (a: Assumption) => boolean) {
   const title = comparableText(candidate.title);
   const description = comparableText(candidate.description);
   for (const a of state.assumptions.values()) {
-    if (a.status === "rejected") continue;
-    if (comparableText(a.title) === title || comparableText(a.description) === description) return a;
+    if (include(a) && (comparableText(a.title) === title || comparableText(a.description) === description)) return a;
   }
   return undefined;
 }

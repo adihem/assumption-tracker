@@ -11,7 +11,8 @@
    Items added before that are lost on exit, and the commands warn about this.
 6. **Final decisions are final (v1).** Accepted, corrected and rejected items cannot be re-reviewed. Branch with `/tree` to try
    another decision.
-7. **Simple duplicate detection.** Only exact normalized title or description matches count. Reworded repeats create
+7. **Simple duplicate detection.** Only exact normalized title or description matches count. A repeat of a *rejected* item
+   becomes a new pending item flagged "possibly related to rejected A-…" rather than being merged. Reworded repeats create
    new items.
 8. **Proposed impact is unverified.** `impact` is the agent's guess, not a measured severity.
 9. **Summary size cap.** At most ~1,500 characters reach the agent. Older decisions beyond that are listed only as a count.

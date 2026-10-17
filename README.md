@@ -18,7 +18,7 @@ npm test
 npm run smoke
 npm run pi
 ```
-`npm test` (70 tests) and `npm run smoke` need no model or account. Before using the agent inside Pi, set up a model
+`npm test` (71 tests), `npm run smoke` and `npm run e2e` need no model or account. Before using the agent inside Pi, set up a model
 (see [Model setup](#model-setup-and-troubleshooting)). On Windows, if Git reports "Filename too long", run
 `git config core.longpaths true`.
 

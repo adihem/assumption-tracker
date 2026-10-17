@@ -23,3 +23,41 @@ No question to the evaluator was needed after those workarounds. The model limit
 README updated after this check: the placeholder clone line was replaced, and a "Model setup and troubleshooting" section
 now covers `/login`, the project-trust warning, the OpenRouter 402 `maxTokens` override (`modelOverrides` in
 `~/.pi/agent/models.json`) and expired keys. A real classmate test is still outstanding.
+
+## Classmate test (to be done by a real person)
+Give the tester only the project folder and README.md. Don't help unless they're completely stuck, and write down every
+time they ask something.
+
+**Setup by you, beforehand:** a provider key with credits, or the `maxTokens` override from the README. Also a fresh terminal
+in the project folder.
+
+**Tasks for the tester:**
+1. Install, run the tests and run the smoke check, following Quick start.
+2. Do the Walkthrough steps 1–4.
+3. Without help, answer: *What does "deferred" mean? Does rejecting an assumption undo code?*
+
+**Record:**
+| Item | Result |
+|---|---|
+| Tester (initials, programme/year) | |
+| Date, OS, Node version | |
+| Tests green / smoke OK | yes / no |
+| Saw `Recorded A-…` and footer count | yes / no |
+| Corrected an item; saw the `[assumption-tracker-decisions]` note | yes / no |
+| Agent's next reply followed the correction | yes / no |
+| Answers to task 3 correct | yes / no |
+| Time to finish (min) | |
+| Questions asked / places stuck | |
+| Suggested README changes | |
+
+The gate passes when the tester finishes tasks 1–3 without help.
+
+## Screen recording checklist (≈3 min)
+1. `npm test` and `npm run smoke`: show the green output.
+2. `npm run pi`, then send the walkthrough prompt. Show the `record_assumption` call and the footer count.
+3. `/assumptions`, then `/review-assumption A-001` → Correct → `Use PostgreSQL…`.
+4. Send the follow-up prompt. Pause on the `[assumption-tracker-decisions]` note and the PostgreSQL reply.
+5. Exit, `npm run pi -- -c`, `/assumptions all`: the same state.
+6. (Optional) `/tree` to before the review: the footer shows pending again.
+
+Before recording, hide API keys, OpenRouter key URLs from error messages, and personal paths if you want.

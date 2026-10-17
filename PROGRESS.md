@@ -112,7 +112,7 @@
 
 ## Next: Phase 6 — polish and evaluation
 
-## Phase 6 — Polish and evaluation materials ✅ materials / ⏳ evaluation runs (2026-10-17)
+## Phase 6 — Polish and evaluation ✅ (2026-10-17; two human-only items open, see checklist)
 - `scenarios/annotated-assumptions.json`: 12 scenarios × 3 ambiguities (impact + "counts if" rule), frozen 2026-10-17.
   It replaces `scenarios/attendance-app.md` (now S01).
 - `npm run extract -- <session-id> [scenario-id]`: read-only scoring sheet from a Pi session file
@@ -132,3 +132,35 @@
   now listed in EVALUATION.md. One complete S02 tracker run (`01a14ac7-7618`) was excluded because its token caps did not match the S02 baseline (confirmed by the evaluator); a sensitivity rescore with it gives tracker 12/15.
 - README first-run check (agent-run, not a classmate): passed after a temporary 8,192 max-tokens cap. README fixes: clone
   line, `/login`, trust warning, the 402 `modelOverrides.maxTokens` workaround, and expired keys. See `docs/README_TEST.md`.
+- Finishing pass:
+  - Real-Pi checks with no reachable model: `scripts/no-model-env.mjs` uses an empty throwaway config dir and strips all
+    credential/provider variables, so this session's `ANTHROPIC_*` variables cannot leak into Pi. `smoke` and `e2e` now use it.
+  - `npm run e2e` is extended: S1 accept, S3 defer → later correct (Defer not offered twice), S4 reject, refusal of a final
+    item, and S10 print mode for three commands. 12/12 checks pass.
+  - Plan §7.6 gap closed: re-reporting a rejected item now says "Possibly related to A-…, which the user rejected" (tool and
+    `/add-assumption`). There is one new test, and the mutation check catches its removal. 71 tests.
+  - `/tracker-hello` without a UI now prints to stderr instead of staying silent.
+  - S04 evaluation sessions copied from `%TEMP%` into `~/.pi/agent/sessions/` (identical copies), so `extract` finds them.
+  - `docs/README_TEST.md`: classmate-test form and a screen-recording checklist.
+
+## Submission checklist (plan §21)
+| Item | Status |
+|---|---|
+| Running Pi extension source | ✅ `src/`, `.pi/extensions/` |
+| Locked, reproducible dependency versions | ✅ pinned in `package.json` + `package-lock.json` |
+| Installation tested from fresh clone | ✅ clone → `npm ci` → test/typecheck/smoke/e2e |
+| Commands table with screenshots or GIF | ◐ table in README; **screen recording to do (human)** |
+| Sample scenario and walkthrough | ✅ README Walkthrough; 12 scenarios |
+| Architecture diagram and data model | ✅ `docs/ARCHITECTURE.md`, `src/types.ts` |
+| Tests + repeatable test command | ✅ `npm test` (71), `npm run smoke`, `npm run e2e` |
+| Evaluation scenarios and labelled ground truth | ✅ `scenarios/annotated-assumptions.json` (frozen) |
+| Actual (not invented) results with baseline | ✅ S01–S05 formative, audited against session files (`docs/EVALUATION.md`) |
+| Limitations and threat/ethics notes | ✅ `docs/KNOWN_LIMITATIONS.md`, EVALUATION threats |
+| License and contributors (if publishing) | — not publishing yet; choose a license before you do |
+| Pi loads extension / agent creates candidate / footer count | ✅ live (Phase 2) |
+| Human reviews; review persists; corrected decision reaches agent | ✅ live (Phases 3, 5) |
+| Restart + branch test | ✅ live (Phases 2–4) |
+| README describes limits and reproduces demo | ✅ agent-run check; **real classmate test to do (human)** |
+
+Optional, not required for the MVP: scenarios S06–S12 (results would then be out of 36 instead of 15), and live
+confirmation of the agent-side parts of S4 and S6.

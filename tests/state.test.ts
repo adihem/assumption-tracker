@@ -8,6 +8,7 @@ import {
   countByStatus,
   createEmptyState,
   findDuplicate,
+  findRejectedMatch,
   nextId,
   replayEvents,
 } from "../src/state.ts";
@@ -70,9 +71,11 @@ describe("findDuplicate", () => {
     expect(findDuplicate(state, login)).toBeUndefined();
   });
 
-  it("ignores rejected items", () => {
+  it("ignores rejected items, which findRejectedMatch reports instead", () => {
     const state = applyEvent(oneItem(), buildReviewedEvent("A-001", "rejected", T1));
     expect(findDuplicate(state, sqlite)).toBeUndefined();
+    expect(findRejectedMatch(state, { ...sqlite, title: "USE sqlite  database" })?.id).toBe("A-001");
+    expect(findRejectedMatch(oneItem(), sqlite)).toBeUndefined(); // pending match is a duplicate, not "related"
   });
 });
 
