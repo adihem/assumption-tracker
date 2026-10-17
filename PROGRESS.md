@@ -68,7 +68,7 @@
     The step "re-review A-002 without Defer" was typed as chat text instead of a `/` command, so the agent explored the repo read-only.
     That path is covered by an automated test.
 
-## Phase 4 — Correct session behaviour ✅ automated / ⏳ manual /tree check (2026-10-17)
+## Phase 4 — Correct session behaviour ✅ (2026-10-17)
 - Restore was already wired in Phase 2: `session_start` and `session_tree` both call `loadState(getBranch())`, and restoring never writes.
 - `tests/branching.test.ts` (8 tests) uses Pi's real `SessionManager.inMemory()` tree, not a mock:
   - A branch made before a review shows the item as pending, and returning restores the decision.
@@ -83,5 +83,11 @@
 - No real-Pi branch e2e: RPC `fork` and `/tree` need user messages, which need a model call. A probe accidentally sent one request
   ("hello") to the user's OpenRouter model, so the scripts now avoid model calls entirely. The branch check stays manual (`/tree`).
 - Tests: 61 passing.
+- Manual `/tree` check ✅ (2026-10-17, session 01a14a96):
+  - The tree shows `created A-001` before the first chat message, and it reached disk after `ok`.
+    Later, `reviewed A-001 corrected -> Use PostgreSQL` then `noted`.
+  - After `/tree` back to before the review, the footer showed `Assumptions: 1 pending`, so the state was rebuilt from that branch.
+  - The return-to-latest step was not done manually; it is covered by the branching tests.
+  - Observation for Phase 5: typing "Use PostgreSQL" as chat confused the agent. It has no view of tracker decisions yet.
 
 ## Next: Phase 5 — inform the agent of review decisions
