@@ -46,7 +46,7 @@
   - Scenario recall in run 2: 1/3 (storage ✓; app type/stack and authentication not recorded).
   - Unrelated noise: OpenRouter 402 errors (Pi requested max_tokens ≈ 233k, more than the free credits allow) before the call succeeded.
 
-## Phase 3 — User review commands ✅ automated / ⏳ manual TUI check (2026-10-17)
+## Phase 3 — User review commands ✅ (2026-10-17)
 - Commands: `/assumptions [all]`, `/review-assumption [ID]`, `/add-assumption`, `/assumptions-help`.
 - Review flow (plan §9.5):
   - Pick an item via `ui.select`, or pass an ID (case-insensitive).
@@ -59,6 +59,13 @@
 - Tests: 53 passing (+6 in `tests/formatter.test.ts`, +10 command-flow tests that use scripted dialog answers).
   A deliberate bug (removing the Esc guard on the note) was caught.
 - `npm run e2e`: real Pi over RPC, add → correct → list, passes. `npm run smoke` now checks all 5 commands.
-- Pending: manual TUI check by the user.
+- Manual TUI check ✅ (2026-10-17):
+  - The `/add-assumption` → A-002 (user) entry, the A-001 correction (the empty answer was re-asked) and the A-002 deferral were all saved.
+    The session file holds exactly one entry per action.
+  - The final-item warning works. `/assumptions all` shows the deferred item first and the correction. The footer showed `0 pending, 1 deferred`.
+    The same state was present after `pi -c`.
+  - Notes: the TUI displayed one notification twice (display only; one saved event).
+    The step "re-review A-002 without Defer" was typed as chat text instead of a `/` command, so the agent explored the repo read-only.
+    That path is covered by an automated test.
 
 ## Next: Phase 4 — session branch behaviour tests
