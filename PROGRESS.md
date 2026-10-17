@@ -24,4 +24,20 @@
 - Tests: 27 passing (`tests/validation.test.ts`, `tests/state.test.ts`), covering plan §14.1 items 1–16 and 20.
   Items 17–19 (formatter) belong to Phases 3/5.
 
-## Next: Phase 2 — `record_assumption` tool (needs `/login` + `/model` in Pi)
+## Phase 2 — Model-callable assumption registration ✅ code / ⏳ live agent check (2026-10-17)
+- `record_assumption` tool (TypeBox schema, `StringEnum` impact, optional `reason`), with model guidance from plan §9.3
+  in `description`, `promptSnippet` and `promptGuidelines`.
+- Flow: validate → duplicate check → `pi.appendEntry("assumption-tracker", event)` → commit state → footer count.
+  Invalid input throws, so Pi returns an error result to the model and nothing is persisted. A failed append leaves state unchanged.
+  A duplicate returns the existing ID (and the user's correction, if any).
+- `src/persistence.ts`: `loadState` replays only the `getBranch()` custom entries. It is wired to `session_start` and `session_tree`
+  now, so restart already works. Phase 4 adds the real branch/resume scenario tests.
+- `src/formatter.ts`: `statusText` → `Assumptions: N pending[, M deferred]` via `ctx.ui.setStatus` (only when `hasUI`).
+- `/tracker-hello` now also reports whether `record_assumption` is active; `npm run smoke` asserts it.
+- Tests: 37 passing (+10 in `tests/integration.test.ts`, which uses a mock Pi): registration and schema, one persisted event per call,
+  invalid input → no persist, duplicate → same ID, concurrent calls → unique IDs, append failure, no-UI mode,
+  restore on resume, `session_tree` rebuild, invalid saved entries skipped with a warning.
+- Scenario: `scenarios/attendance-app.md`.
+- Pending: the "done when" gate (a genuine agent call that is still visible after restart) needs a logged-in model. The user runs it.
+
+## Next: Phase 3 — user review commands

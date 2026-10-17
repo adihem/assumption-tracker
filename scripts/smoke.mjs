@@ -1,4 +1,5 @@
-// Headless check: start Pi in RPC mode with the extension, run /tracker-hello, expect its notification.
+// Headless check: start Pi in RPC mode with the extension, run /tracker-hello, expect its notification
+// (which also confirms the record_assumption tool is active).
 // No model or login needed: extension commands are handled locally.
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
@@ -21,7 +22,7 @@ createInterface({ input: pi.stdout }).on("line", (line) => {
   let msg;
   try { msg = JSON.parse(line); } catch { return; }
   if (msg.id === "1") seen.registered = msg.data?.commands?.some((c) => c.name === "tracker-hello") ?? false;
-  if (msg.type === "extension_ui_request" && msg.method === "notify") seen.notified = msg.message === "Assumption Tracker loaded.";
+  if (msg.type === "extension_ui_request" && msg.method === "notify") seen.notified = msg.message === "Assumption Tracker loaded. record_assumption tool: active.";
   if (msg.id === "2") seen.handled = msg.success === true;
   if (ok()) { clearTimeout(timer); pi.stdin.end(); }
 });
