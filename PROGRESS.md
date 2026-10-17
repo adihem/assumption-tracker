@@ -121,5 +121,6 @@
 - Docs: `docs/EVALUATION.md` (protocol, metrics, pilot P1–P3, empty formal results table), `docs/TEST_PLAN.md`
   (automated coverage, S1–S10 status), `docs/KNOWN_LIMITATIONS.md`, `docs/ARCHITECTURE.md`, `docs/IMPLEMENTATION_PLAN.md` (copy of the spec).
 - README rewritten for a new reader: quick start, commands, a 5-minute walkthrough, how it works, scripts table.
+- Fresh-clone check: `git clone` → `npm ci --ignore-scripts` → test (70) / typecheck / smoke / e2e all pass.
 - No model calls made by the assistant in this phase. Evaluation runs, the S1/S3/S4/S6/S10 manual confirmations and the
   screen recording are the user's.
