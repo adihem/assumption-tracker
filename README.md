@@ -1,9 +1,21 @@
 # Assumption Tracker (Pi extension)
 
 Pi coding agent extension that records agent-reported assumptions for human review.
-Status: **Phase 2**. The agent can record candidate assumptions with the `record_assumption` tool. They are saved
-in the Pi session, restored on resume, and counted in the footer. Review commands (`/assumptions`,
-`/review-assumption`, `/add-assumption`) arrive in Phase 3.
+Status: **Phase 3**. The agent records candidate assumptions with the `record_assumption` tool. You list, add and
+review them with slash commands. Everything is saved in the Pi session and restored on resume.
+Not yet: passing your decisions back to the agent (Phase 5).
+
+## Commands
+| Command | What it does |
+|---|---|
+| `/assumptions` | List pending and deferred items, with totals |
+| `/assumptions all` | Also list accepted, corrected and rejected items |
+| `/review-assumption [ID]` | Pick an item (or name its ID), then Accept / Correct / Defer / Reject / Cancel, plus an optional note |
+| `/add-assumption` | Record an assumption the agent missed (title, description, optional reason, impact) |
+| `/assumptions-help` | Explain the statuses |
+
+Esc at any dialog cancels without saving. Accepted, corrected and rejected are final in v1. Reviewing never starts an
+agent run by itself, and rejecting does not undo code that has already been written.
 
 Recorded items are *agent-reported* candidates, not detected facts, and recording one never blocks the agent.
 
@@ -33,8 +45,14 @@ In Pi, `/tracker-hello` reports "Assumption Tracker loaded. record_assumption to
 ```bash
 npm run smoke
 ```
-Starts Pi in RPC mode, checks that `/tracker-hello` is registered, runs it, and expects the message that confirms the tool
-is active. Prints `SMOKE OK` (exit 0) or `SMOKE FAILED {...}` (exit 1). Works in PowerShell, cmd and bash.
+Starts Pi in RPC mode, checks that all commands are registered, runs `/tracker-hello`, and expects the message that
+confirms the tool is active. Prints `SMOKE OK` (exit 0) or `SMOKE FAILED {...}` (exit 1). Works in PowerShell, cmd and bash.
+
+```bash
+npm run e2e
+```
+Drives `/add-assumption` → `/review-assumption` (correct) → `/assumptions all` in real Pi over RPC, answering the dialogs
+from a script. Uses an in-memory session and no model. Prints `E2E OK` and the final list.
 
 ## Layout
 - `src/types.ts`: data contract and constants

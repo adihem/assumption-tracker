@@ -7,13 +7,23 @@ type Entry = { type: string; customType?: string; data?: unknown };
 /** Minimal stand-in for the parts of Pi the extension uses. The branch is shared, so a new mock can "resume" it. */
 function mockPi(branch: Entry[] = [], hasUI = true) {
   const tools = new Map<string, any>();
+  const commands = new Map<string, any>();
   const handlers = new Map<string, (event: unknown, ctx: unknown) => unknown>();
   const statuses: (string | undefined)[] = [];
   const notifications: string[] = [];
+  const answers: (string | undefined)[] = []; // scripted replies to select/input, in order; undefined = Esc
+  const prompts: string[] = [];
+  const answer = async (title: string, options?: string[]) => {
+    prompts.push(title);
+    if (answers.length === 0) throw new Error(`unexpected dialog: ${title}`);
+    const reply = answers.shift();
+    // A select reply may be a prefix of the option, e.g. "Correct" for "Correct: replace it with my decision".
+    return options && reply !== undefined ? options.find((o) => o.startsWith(reply)) ?? reply : reply;
+  };
   let failAppend = false;
   const pi = {
     registerTool: (tool: any) => tools.set(tool.name, tool),
-    registerCommand: () => {},
+    registerCommand: (name: string, options: any) => commands.set(name, options),
     on: (name: string, handler: any) => handlers.set(name, handler),
     appendEntry: (customType: string, data: unknown) => {
       if (failAppend) throw new Error("disk full");
@@ -26,6 +36,8 @@ function mockPi(branch: Entry[] = [], hasUI = true) {
     ui: {
       setStatus: (_key: string, text: string | undefined) => statuses.push(text),
       notify: (message: string) => notifications.push(message),
+      select: (title: string, options: string[]) => answer(title, options),
+      input: (title: string) => answer(title),
     },
   };
   assumptionTracker(pi as any);
@@ -37,8 +49,16 @@ function mockPi(branch: Entry[] = [], hasUI = true) {
     statuses,
     notifications,
     setFailAppend: (v: boolean) => (failAppend = v),
+    prompts,
     emit: (name: string) => handlers.get(name)!({ type: name }, ctx),
     call: (params: Record<string, unknown>) => tool.execute("call-1", params, undefined, undefined, ctx),
+    /** Runs a slash command with scripted dialog answers; fails if any scripted answer is left unused. */
+    run: async (name: string, args = "", replies: (string | undefined)[] = []) => {
+      answers.push(...replies);
+      await commands.get(name)!.handler(args, ctx);
+      expect(answers, "unused scripted answers").toEqual([]);
+    },
+    commandNames: () => [...commands.keys()],
   };
 }
 
@@ -146,5 +166,117 @@ describe("session restore", () => {
     const resumed = mockPi(first.branch);
     expect(resumed.notifications).toEqual(["Assumption Tracker skipped 1 invalid saved entry."]);
     expect(resumed.statuses.at(-1)).toBe("Assumptions: 1 pending");
+  });
+});
+
+describe("review commands", () => {
+  const reviewEvents = (branch: Entry[]) => branch.filter((e: any) => e.data?.event === "reviewed").map((e) => e.data);
+  async function withOne(hasUI = true) {
+    const m = mockPi([], hasUI);
+    await m.call(sqlite);
+    return m;
+  }
+
+  it("registers the Phase 3 commands", () => {
+    expect(mockPi().commandNames()).toEqual(
+      expect.arrayContaining(["assumptions", "review-assumption", "add-assumption", "assumptions-help"]),
+    );
+  });
+
+  it("/assumptions lists unresolved items, and 'all' adds reviewed ones", async () => {
+    const m = await withOne();
+    await m.run("assumptions");
+    expect(m.notifications.at(-1)).toMatch(/^Agent-reported assumptions.*1 pending/);
+    expect(m.notifications.at(-1)).toContain("A-001 | Use SQLite database | medium | pending");
+
+    await m.run("review-assumption", "", ["A-001", "Accept", ""]);
+    await m.run("assumptions");
+    expect(m.notifications.at(-1)).toMatch(/No assumptions awaiting review/);
+    await m.run("assumptions", "all");
+    expect(m.notifications.at(-1)).toContain("A-001 | Use SQLite database | medium | accepted");
+  });
+
+  it("accepts via the selector with one persisted review event", async () => {
+    const m = await withOne();
+    await m.run("review-assumption", "", ["A-001", "Accept", ""]);
+    expect(reviewEvents(m.branch)).toEqual([expect.objectContaining({ id: "A-001", status: "accepted" })]);
+    expect(m.notifications.at(-1)).toBe("A-001 marked accepted. The agent sees this on your next message.");
+    expect(m.statuses.at(-1)).toBeUndefined(); // nothing left awaiting review clears the footer
+    expect(m.prompts[1]).toContain("Assumption: Store attendance records in a local SQLite database.");
+  });
+
+  it("corrects, re-asking until the replacement is non-empty, and saves the note", async () => {
+    const m = await withOne();
+    await m.run("review-assumption", "a-001", ["Correct", "   ", "Use PostgreSQL", "Multiple users"]);
+    expect(m.notifications).toContain("correction must not be empty. Try again, or press Esc to cancel.");
+    expect(reviewEvents(m.branch)).toEqual([
+      expect.objectContaining({ status: "corrected", correction: "Use PostgreSQL", reviewNote: "Multiple users" }),
+    ]);
+  });
+
+  it("defers, then allows a later review without offering Defer again", async () => {
+    const m = await withOne();
+    await m.run("review-assumption", "A-001", ["Defer", "Ask the team"]);
+    expect(m.statuses.at(-1)).toBe("Assumptions: 0 pending, 1 deferred");
+
+    await m.run("review-assumption", "A-001", ["Reject", ""]);
+    expect(m.prompts.at(-2)).toContain("Status: deferred");
+    expect(reviewEvents(m.branch).map((e: any) => e.status)).toEqual(["deferred", "rejected"]);
+  });
+
+  it("Esc or Cancel at any step persists nothing", async () => {
+    const m = await withOne();
+    await m.run("review-assumption", "", [undefined]); // Esc in the selector
+    await m.run("review-assumption", "A-001", ["Cancel"]);
+    await m.run("review-assumption", "A-001", [undefined]); // Esc on the action
+    await m.run("review-assumption", "A-001", ["Correct", undefined]); // Esc on the correction
+    await m.run("review-assumption", "A-001", ["Accept", undefined]); // Esc on the note
+    expect(reviewEvents(m.branch)).toEqual([]);
+    expect(m.statuses.at(-1)).toBe("Assumptions: 1 pending");
+  });
+
+  it("reports unknown IDs, final items, and an empty review queue without changing state", async () => {
+    const m = await withOne();
+    await m.run("review-assumption", "A-404");
+    expect(m.notifications.at(-1)).toMatch(/Unknown assumption ID "A-404"/);
+
+    await m.run("review-assumption", "A-001", ["Reject", ""]);
+    await m.run("review-assumption", "A-001");
+    expect(m.notifications.at(-1)).toMatch(/already rejected; re-reviewing a final decision is not supported/);
+    await m.run("review-assumption");
+    expect(m.notifications.at(-1)).toBe("No assumptions awaiting review.");
+    expect(reviewEvents(m.branch)).toHaveLength(1);
+  });
+
+  it("/add-assumption records a user-origin item, and rejects invalid input or duplicates", async () => {
+    const m = mockPi();
+    await m.run("add-assumption", "", ["No authentication", "Anyone can mark attendance without logging in.", "", "high"]);
+    expect(m.branch.at(-1)).toMatchObject({ data: { assumption: { id: "A-001", origin: "user", impact: "high", reason: "" } } });
+    expect(m.notifications.at(-1)).toBe("Added A-001 (pending). Review it with /review-assumption.");
+
+    await m.run("add-assumption", "", ["No", "Too short", "", "low"]);
+    expect(m.notifications.at(-1)).toMatch(/Assumption not recorded: title must be at least 3 characters/);
+    await m.run("add-assumption", "", ["no authentication", "Different description text here.", "", "low"]);
+    expect(m.notifications.at(-1)).toBe("Already recorded as A-001 (pending); nothing added.");
+    await m.run("add-assumption", "", ["Some title", undefined]); // Esc
+    expect(m.branch).toHaveLength(1);
+  });
+
+  it("does not open dialogs without a UI", async () => {
+    const m = await withOne(false);
+    await m.run("review-assumption", "A-001"); // run() fails on any dialog
+    await m.run("add-assumption");
+    expect(reviewEvents(m.branch)).toEqual([]);
+  });
+
+  it("a reviewed decision survives resume", async () => {
+    const m = await withOne();
+    await m.run("review-assumption", "A-001", ["Correct", "Use PostgreSQL", ""]);
+    const resumed = mockPi(m.branch);
+    await resumed.run("assumptions", "all");
+    expect(resumed.notifications.at(-1)).toContain("Corrected to: Use PostgreSQL");
+    expect(text(await resumed.call(sqlite))).toBe(
+      "Already recorded as A-001 (status: corrected); not recorded again. The user corrected it to: Use PostgreSQL",
+    );
   });
 });

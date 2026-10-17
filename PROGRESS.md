@@ -46,4 +46,19 @@
   - Scenario recall in run 2: 1/3 (storage ✓; app type/stack and authentication not recorded).
   - Unrelated noise: OpenRouter 402 errors (Pi requested max_tokens ≈ 233k, more than the free credits allow) before the call succeeded.
 
-## Next: Phase 3 — user review commands
+## Phase 3 — User review commands ✅ automated / ⏳ manual TUI check (2026-10-17)
+- Commands: `/assumptions [all]`, `/review-assumption [ID]`, `/add-assumption`, `/assumptions-help`.
+- Review flow (plan §9.5):
+  - Pick an item via `ui.select`, or pass an ID (case-insensitive).
+  - The full detail is shown, then Accept / Correct / Defer (pending only) / Reject / Cancel.
+  - Correct re-asks until the text is valid. An optional note follows. Esc anywhere means no change.
+- Saving uses the same check → `appendEntry` → apply order as recording, and is re-checked against the latest state at commit time.
+- Without a UI, commands print a diagnostic to stderr and open no dialogs (`/assumptions` prints the list).
+- `src/formatter.ts`: `listText` (unresolved first, numeric ID order, descriptions truncated at 100 chars), `detailText` (full text),
+  `reviewLabel`, `HELP_TEXT`. Labels say "agent-reported … candidates, not verified facts".
+- Tests: 53 passing (+6 in `tests/formatter.test.ts`, +10 command-flow tests that use scripted dialog answers).
+  A deliberate bug (removing the Esc guard on the note) was caught.
+- `npm run e2e`: real Pi over RPC, add → correct → list, passes. `npm run smoke` now checks all 5 commands.
+- Pending: manual TUI check by the user.
+
+## Next: Phase 4 — session branch behaviour tests

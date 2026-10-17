@@ -4,7 +4,8 @@
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 
-const cli = "node_modules/@earendil-works/pi-coding-agent/dist/bundle/cli.js";
+const EXPECTED_COMMANDS = ["tracker-hello", "assumptions", "review-assumption", "add-assumption", "assumptions-help"];
+const cli ="node_modules/@earendil-works/pi-coding-agent/dist/bundle/cli.js";
 const pi = spawn(
   process.execPath,
   [cli, "-na", "--offline", "--no-session", "-e", "./.pi/extensions/assumption-tracker.ts", "--mode", "rpc"],
@@ -21,7 +22,10 @@ const timer = setTimeout(() => pi.stdin.end(), 60_000);
 createInterface({ input: pi.stdout }).on("line", (line) => {
   let msg;
   try { msg = JSON.parse(line); } catch { return; }
-  if (msg.id === "1") seen.registered = msg.data?.commands?.some((c) => c.name === "tracker-hello") ?? false;
+  if (msg.id === "1") {
+    const names = new Set(msg.data?.commands?.map((c) => c.name));
+    seen.registered = EXPECTED_COMMANDS.every((n) => names.has(n));
+  }
   if (msg.type === "extension_ui_request" && msg.method === "notify") seen.notified = msg.message === "Assumption Tracker loaded. record_assumption tool: active.";
   if (msg.id === "2") seen.handled = msg.success === true;
   if (ok()) { clearTimeout(timer); pi.stdin.end(); }
