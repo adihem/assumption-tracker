@@ -38,8 +38,10 @@ createInterface({ input: pi.stdout }).on("line", (line) => {
 pi.on("close", () => {
   const list = notes.at(-1) ?? "";
   const checks = {
-    added: notes.includes("Added A-001 (pending). Review it with /review-assumption."),
-    reviewed: notes.includes("A-001 marked corrected. The agent sees this on your next message."),
+    added: notes.some((n) => n.startsWith("Added A-001 (pending). Review it with /review-assumption.")),
+    reviewed: notes.some((n) => n.startsWith("A-001 marked corrected. The agent sees this on your next message.")),
+    // in-memory session with no chat message yet, so the not-on-disk warning must be shown
+    warned: notes.some((n) => n.includes("not on disk until you send a first message")),
     listed: list.includes("A-001 | No authentication | high | corrected") && list.includes("Corrected to: Teachers log in with a password"),
     allRepliesUsed: replies.length === 0,
   };
