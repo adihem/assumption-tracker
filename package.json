@@ -1,7 +1,22 @@
 {
   "name": "assumption-tracker",
   "version": "1.0.0",
-  "description": "",
+  "private": true,
+  "description": "Pi coding-agent extension that records the agent's unstated assumptions for human review, persists decisions in the session, and tells the agent about them.",
+  "keywords": [
+    "pi",
+    "pi-extension",
+    "coding-agent",
+    "ai-agents",
+    "human-in-the-loop",
+    "assumptions"
+  ],
+  "author": "Hemanth Sriram",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
@@ -11,10 +26,6 @@
     "extract": "node scripts/extract-session.mjs",
     "pi:baseline": "pi -na"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
   "devDependencies": {
     "@types/node": "26.6.5",
     "typescript": "7.0.2",

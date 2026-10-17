@@ -115,3 +115,7 @@ docs/           architecture, evaluation, test plan, limitations, original plan
 Assumptions are stored in Pi session files (`~/.pi/agent/sessions/`), alongside the conversation. Don't type secrets into
 them. To remove a test session, delete its `.jsonl` file there. The extension makes no network calls; model traffic is
 Pi's own, sent to the provider you configure.
+
+## License
+[MIT](LICENSE) © 2026 Hemanth Sriram. The original specification is in [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md).
+Continuous integration (`.github/workflows/ci.yml`) runs typecheck, tests, smoke and e2e on Ubuntu and Windows with no model or secrets.
