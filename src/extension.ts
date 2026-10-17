@@ -1,8 +1,14 @@
 import { StringEnum } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
-import { detailText, HELP_TEXT, listText, reviewLabel, statusText } from "./formatter.ts";
-import { hasConversation, loadState, NOT_YET_SAVED_WARNING } from "./persistence.ts";
+import { decisionContext, detailText, HELP_TEXT, listText, reviewLabel, statusText } from "./formatter.ts";
+import {
+  DECISION_MESSAGE_TYPE,
+  hasConversation,
+  lastDecisionSummary,
+  loadState,
+  NOT_YET_SAVED_WARNING,
+} from "./persistence.ts";
 import {
   applyEvent,
   awaitingReview,
@@ -84,6 +90,15 @@ export default function assumptionTracker(pi: ExtensionAPI) {
 
   pi.on("session_start", (_event, ctx) => restore(ctx));
   pi.on("session_tree", (_event, ctx) => restore(ctx));
+
+  // Tell the agent about human decisions at the start of a user-started run (plan §9.7). Only when the summary
+  // changed since the copy still in context, so it is not repeated every turn. This never starts a run by itself.
+  pi.on("before_agent_start", (event, ctx) => {
+    if (event.messageType !== "user") return;
+    const summary = decisionContext(state);
+    if (!summary || summary === lastDecisionSummary(ctx.sessionManager)) return;
+    return { message: { customType: DECISION_MESSAGE_TYPE, content: summary, display: true } };
+  });
 
   pi.registerTool({
     name: "record_assumption",

@@ -67,6 +67,19 @@ function harness(sm = SessionManager.inMemory("/project")) {
       ctx.sessionManager.branch(entryId);
       handlers.get("session_tree")!({ type: "session_tree" }, ctx);
     },
+    /** Like Pi starting a run: fire before_agent_start, then persist any returned message as Pi does. */
+    async startRun(messageType: "user" | "custom" = "user") {
+      const result: any = await handlers.get("before_agent_start")!(
+        { type: "before_agent_start", messageType, prompt: "continue", systemPrompt: "", systemPromptOptions: {} },
+        ctx,
+      );
+      if (messageType === "user") ctx.sessionManager.appendMessage({ role: "user", content: "continue", timestamp: Date.now() });
+      if (result?.message) {
+        const { customType, content, display } = result.message;
+        ctx.sessionManager.appendCustomMessageEntry(customType, content, display);
+      }
+      return result?.message as { customType: string; content: string; display: boolean } | undefined;
+    },
     /** Like /new, /resume or /fork: a different session manager, then session_start. */
     switchTo(next: SessionManager, reason = "resume") {
       ctx.sessionManager = next;
@@ -172,5 +185,61 @@ describe("session switches (session_start)", () => {
     h.navigate(h.sm.appendCustomEntry("other-extension", {}));
     h.switchTo(h.sm);
     expect(h.sm.getEntries().length).toBe(count + 1); // only the entry the test itself added
+  });
+});
+
+describe("decision context for the agent (before_agent_start)", () => {
+  it("injects nothing until a decision exists, then the corrected decision on the next user run", async () => {
+    const h = harness();
+    await h.record(sqlite);
+    expect(await h.startRun()).toBeUndefined(); // only pending: nothing approved to report
+    await h.review("A-001", ["Correct", "Use PostgreSQL", ""]);
+
+    const message = await h.startRun();
+    expect(message).toMatchObject({ customType: "assumption-tracker-decisions", display: true });
+    expect(message!.content).toContain('- A-001 CORRECTED: instead of "Use SQLite database", do "Use PostgreSQL".');
+  });
+
+  it("does not repeat an unchanged summary, but re-sends after a new decision", async () => {
+    const h = harness();
+    await h.record(sqlite);
+    await h.record(auth);
+    await h.review("A-001", ["Accept", ""]);
+    expect(await h.startRun()).toBeDefined();
+    expect(await h.startRun()).toBeUndefined(); // same summary already in context
+
+    await h.review("A-002", ["Reject", ""]);
+    const updated = await h.startRun();
+    expect(updated!.content).toContain("A-002 REJECTED");
+    expect(updated!.content).toContain("A-001 ACCEPTED"); // full current list, not just the change
+  });
+
+  it("ignores runs started by custom messages", async () => {
+    const h = harness();
+    await h.record(sqlite);
+    await h.review("A-001", ["Accept", ""]);
+    expect(await h.startRun("custom")).toBeUndefined();
+  });
+
+  it("follows the branch: no decision before the review, re-sent after returning to a branch without it", async () => {
+    const h = harness();
+    const { entryId: created } = await h.record(sqlite);
+    await h.review("A-001", ["Correct", "Use PostgreSQL", ""]);
+    expect(await h.startRun()).toBeDefined();
+
+    h.navigate(created!); // before the review: nothing to report
+    expect(await h.startRun()).toBeUndefined();
+
+    await h.review("A-001", ["Reject", ""]); // a different decision on this branch
+    expect((await h.startRun())!.content).toContain("A-001 REJECTED");
+  });
+
+  it("does not write entries or start a run when a review happens", async () => {
+    const h = harness();
+    await h.record(sqlite);
+    const before = h.sm.getEntries().length;
+    await h.review("A-001", ["Accept", ""]);
+    const added = h.sm.getEntries().slice(before).map((e: any) => e.type);
+    expect(added).toEqual(["custom"]); // only the review event; no message, no run
   });
 });

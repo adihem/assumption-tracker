@@ -1,9 +1,9 @@
 # Assumption Tracker (Pi extension)
 
 Pi coding agent extension that records agent-reported assumptions for human review.
-Status: **Phase 3**. The agent records candidate assumptions with the `record_assumption` tool. You list, add and
-review them with slash commands. Everything is saved in the Pi session and restored on resume.
-Not yet: passing your decisions back to the agent (Phase 5).
+Status: **Phase 5**. The agent records candidate assumptions with the `record_assumption` tool. You list, add and
+review them with slash commands. Your accepted, corrected and rejected decisions are shown to the agent at the start
+of your next message. Everything is saved in the Pi session and follows its branches.
 
 ## Commands
 | Command | What it does |
@@ -74,3 +74,10 @@ Assumptions follow Pi's session tree. After `/tree` (or `/fork`, `/resume`, `/ne
 active branch only, so decisions made on another branch never appear. IDs are unique within a branch.
 Pi writes a new session to disk only after its first chat message. Assumptions added before that are lost if you exit
 first, and the commands warn about this.
+
+## How the agent learns your decisions
+When you send a message, the extension adds a short note to that run: *"Human-reviewed project decisions… A-001
+CORRECTED: instead of \"Use SQLite database\", do \"Use PostgreSQL\"."* It is shown in the transcript. It is capped at about 1,500
+characters, newest first, and only sent when it changed since the copy the model still sees. Pending and deferred items are
+never presented as approved. This informs the agent but does not enforce anything: the agent can still ignore it, and nothing
+undoes code already written.

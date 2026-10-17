@@ -27,6 +27,23 @@ export function hasConversation(sessionManager: { getEntries(): readonly BranchE
 export const NOT_YET_SAVED_WARNING =
   " Note: this new session is not on disk until you send a first message; exiting before that loses it.";
 
+export const DECISION_MESSAGE_TYPE = "assumption-tracker-decisions";
+
+/**
+ * Text of the newest decision summary the model still sees. buildContextEntries() follows the active branch and
+ * compaction, so after a branch switch or a compaction that drops it, this is undefined and the summary is re-sent.
+ */
+export function lastDecisionSummary(sessionManager: { buildContextEntries(): readonly BranchEntry[] }): string | undefined {
+  const entries = sessionManager.buildContextEntries();
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const e = entries[i] as BranchEntry & { content?: unknown };
+    if (e.type === "custom_message" && e.customType === DECISION_MESSAGE_TYPE) {
+      return typeof e.content === "string" ? e.content : undefined;
+    }
+  }
+  return undefined;
+}
+
 /** Rebuilds state from the active branch only (never getEntries(), which mixes in abandoned branches). Never writes. */
 export function loadState(sessionManager: { getBranch(): readonly BranchEntry[] }): {
   state: TrackerState;
