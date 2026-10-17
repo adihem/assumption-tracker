@@ -112,7 +112,7 @@
 
 ## Next: Phase 6 — polish and evaluation
 
-## Phase 6 — Polish and evaluation ✅ (2026-10-17; screen recording still open)
+## Phase 6 — Polish and evaluation ✅ (2026-10-17; recording needs the API key cut out before sharing)
 - `scenarios/annotated-assumptions.json`: 12 scenarios × 3 ambiguities (impact + "counts if" rule), frozen 2026-10-17.
   It replaces `scenarios/attendance-app.md` (now S01).
 - `npm run extract -- <session-id> [scenario-id]`: read-only scoring sheet from a Pi session file
@@ -149,7 +149,7 @@
 | Running Pi extension source | ✅ `src/`, `.pi/extensions/` |
 | Locked, reproducible dependency versions | ✅ pinned in `package.json` + `package-lock.json` |
 | Installation tested from fresh clone | ✅ clone → `npm ci` → test/typecheck/smoke/e2e |
-| Commands table with screenshots or GIF | ◐ table in README; **screen recording to do (human)** |
+| Commands table with screenshots or GIF | ◐ recording made and reviewed (docs/README_TEST.md); **must be trimmed or re-recorded before sharing: it shows the API key** |
 | Sample scenario and walkthrough | ✅ README Walkthrough; 12 scenarios |
 | Architecture diagram and data model | ✅ `docs/ARCHITECTURE.md`, `src/types.ts` |
 | Tests + repeatable test command | ✅ `npm test` (71), `npm run smoke`, `npm run e2e` |

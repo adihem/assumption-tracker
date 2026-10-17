@@ -102,3 +102,21 @@ assumes the organizer did not help; that field is blank.
    → The guide now says to select the agent's plan reply right after the `Recorded A-…` line.
 4. The 402 error appeared again with the first model. The tester switched to a free model and continued without the
    `maxTokens` fix.
+
+## Screen recording — review (2026-10-17)
+File: `assumption-tracker-demo.mp4` (4:40, 960×1024), kept **outside the repository**, next to the project folder.
+Reviewed by sampling frames about every 20 s.
+
+| Checklist step | In the video? |
+|---|---|
+| 1. `npm test` + `npm run smoke` | **No.** It goes from `cd` straight to `npm run pi` (around 0:42) |
+| 2. Prompt → `record_assumption` + footer count | ✅ ~1:45–2:05. The model's first two calls omitted `title` and were **rejected by the schema before saving**; it noticed ("I forgot the title field") and retried. A-001 "Simple storage without database" and A-002 "Web-based single-page app" were recorded, and the footer showed `2 pending` |
+| 3. `/assumptions`, review → Correct | ✅ A-003 "Use SQLite database" was added manually; **A-001 (storage) was corrected to PostgreSQL**, so the correction matched its topic this time |
+| 4. Decisions block + reply follows it | ✅ ~2:55–3:20. `[assumption-tracker-decisions]` with "A-001 CORRECTED"; the reply was "Data layer (following A-001 corrected): DB: PostgreSQL…" |
+| 5. Exit + `npm run pi -- -c`, same state | **No.** One Pi session runs from 0:42 to the end |
+| 6. `/tree` to before the review | ✅ ~3:40–4:20. `/tree` to the plan reply gave `/assumptions all` = A-001 and A-002 **pending, 0 reviewed**, confirming the D6 guide fix. It ends with `/assumptions-help` |
+
+**⚠ Do not publish this recording as-is.** At about **1:06** the full OpenRouter API key is visible in plain text while it is
+pasted into Pi's login prompt. The key should be **revoked/rotated on openrouter.ai** whatever happens to the video. To use
+the video, cut roughly 0:55–1:20 (the login) or re-record after logging in off-camera. Steps 1 and 5 can be added in the
+re-recording or shown with the classmate-test transcript.
