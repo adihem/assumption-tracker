@@ -97,7 +97,7 @@ Build log per phase: [PROGRESS.md](PROGRESS.md).
 ## Evaluation
 There are 12 scenarios with pre-annotated ambiguities in [scenarios/annotated-assumptions.json](scenarios/annotated-assumptions.json).
 Protocol, metrics, pilot results and the empty results table are in [docs/EVALUATION.md](docs/EVALUATION.md). Test coverage and
-manual scenario status are in [docs/TEST_PLAN.md](docs/TEST_PLAN.md). A first-run check of this README is in [docs/README_TEST.md](docs/README_TEST.md).
+manual scenario status are in [docs/TEST_PLAN.md](docs/TEST_PLAN.md). A first-run check of this README is in [docs/README_TEST.md](docs/README_TEST.md). To run a classmate test, follow [docs/CLASSMATE_GUIDE.md](docs/CLASSMATE_GUIDE.md).
 
 ## Layout
 ```text

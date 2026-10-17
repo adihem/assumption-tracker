@@ -25,6 +25,8 @@ now covers `/login`, the project-trust warning, the OpenRouter 402 `maxTokens` o
 `~/.pi/agent/models.json`) and expired keys. A real classmate test is still outstanding.
 
 ## Classmate test (to be done by a real person)
+Full step-by-step instructions for the organizer and the tester, including a results form: [CLASSMATE_GUIDE.md](CLASSMATE_GUIDE.md).
+The summary below is kept for reference.
 Give the tester only the project folder and README.md. Don't help unless they're completely stuck, and write down every
 time they ask something.
 
