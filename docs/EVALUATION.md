@@ -88,7 +88,7 @@ framed as an assumption, so it is N under that rule.
 #### Extract and review notes
 
 - **S01:** Baseline chose Next.js/TypeScript/SQLite+Prisma and surfaced storage and app type, but not authentication. Tracker recorded A-001 (CLI vs web and local JSON storage; medium), then the operator corrected it to PostgreSQL for multiple teachers. The decision note appeared before the next answer, which used PostgreSQL. One correction; uptake 1/1; 0/1 false positives.
-- **S02:** Baseline chose React 19/TypeScript/Vite and localStorage. Tracker chose React/TypeScript/Tailwind and localStorage but made no `record_assumption` calls. Both replies were truncated after the relevant choices; the visible first replies were scored. No review or correction; tracker false positives 0/0.
+- **S02 primary matched-cap pair:** Baseline chose React 19/TypeScript/Vite and localStorage. Tracker chose React/TypeScript/Tailwind and localStorage but made no `record_assumption` calls. Both first replies were truncated after the relevant choices; the visible choices were scored. No review or correction; tracker false positives 0/0.
 - **S03:** Baseline described email/password fields, bcrypt, and an HttpOnly-cookie JWT session. Tracker recorded four candidates (React/Vite, Tailwind, cookie sessions vs JWT in localStorage, and React Hook Form/Zod). A-003 was corrected to server-side sessions with an opaque ID in a Secure/HttpOnly/SameSite=Strict cookie; the injected decision appeared before the follow-up, which adopted the server-side store and did not use JWT. One correction; uptake 1/1; 0/4 false positives. Under the stated criterion the tracker still missed auth method and password storage.
 - **S04:** Baseline proposed Node's native HTTP module or Express and in-memory persistence, but did not mention authentication. Tracker recorded TypeScript/Express/SQLite, no authentication, and SQLite file persistence. A-001 was corrected to JavaScript/Fastify and leaving the database open. The first reply surfaced all three labels; 0/3 false positives. The prescribed follow-up was sent and the decision injection appeared, but OpenRouter returned `402 in_flight_budget_exhausted` before the reply, so uptake is unobserved, not scored as failure.
 - **S05:** Baseline proposed S3-compatible object storage, JPEG/PNG/WebP and a 5–10 MB limit, plus resized images and thumbnails. Tracker recorded local filesystem storage and an existing users/auth table, and also specified a 5 MB/type validation and Sharp resizing/thumbnailing. A-001 was corrected to S3/R2 object storage with the object key in the database; the next reply acknowledged and followed it. One correction; uptake 1/1; 0/2 false positives. The privacy-first evaluator noted that avatar visibility/access remained undecided.
@@ -109,7 +109,7 @@ Inclusion rule as applied: the first attempt per scenario × condition with Kimi
 | `01a14ac6-180d` | S03 | — | 402, no reply | no | provider error |
 | `01a14ac6-1954` | S01 | — | 402, no reply | no | provider error |
 | `01a14ac6-4ae2` | S04 | — | 402, no reply | no | provider error |
-| `01a14ac7-7618` | S02 | tracker | complete; recorded 3 (A-001 "No backend or auth needed", A-002, A-003); A-001 corrected | no | **to confirm** (likely token caps not matched with the S02 baseline) |
+| `01a14ac7-7618` | S02 | tracker | complete; recorded 3 (A-001 "No backend or auth needed", A-002, A-003); A-001 corrected | no (sensitivity only) | Token caps did not match the S02 baseline: it used the temporary 262,144/8,192 cap, while the matched S02 pair used 8,192/4,096 (confirmed by the evaluator). See rescore below. |
 | `01a14ac7-a5ae` | S03 | baseline | complete | no | different model (`z-ai/glm-4.6`) |
 | `01a14ac8-908a` | S03 | tracker | 402 after tool calls, no reply | no | provider error |
 | `01a14ac8-cc10` | S02 | baseline | 402, no reply | no | provider error |
@@ -117,9 +117,29 @@ Inclusion rule as applied: the first attempt per scenario × condition with Kimi
 | `01a14acf-aa16` | S03 | tracker | first reply truncated (`length`), 0 recorded | no | truncated |
 | the 10 sessions in the table above | | | | yes | |
 
-Sensitivity: if `01a14ac7-7618` replaced `01a14acc` as the S02 tracker run, its recorded "No backend or auth needed" item
-would bear on S02 storage and multi-user. Rescore it with `npm run extract -- 01a14ac7-7618 S02-todo` before drawing any
-conclusion from the 12/15 vs 11/15 difference.
+#### S02 unmatched-cap sensitivity rescore
+
+`npm run extract -- 01a14ac7-7618 S02-todo` confirms this is a complete Kimi K2.6 tracker session with three recorded
+items, one correction, and one decision injection. Its filled score is:
+
+| Ambiguity | Impact | Surfaced? | Evidence |
+|---|---|---|---|
+| storage | medium | Y | A-001: “Todos will be stored in browser localStorage only”; first reply also says localStorage persists todos across browser sessions. |
+| multi-user | medium | Y | A-001: “No backend or auth needed” and “no user accounts or cloud sync.” |
+| platform | low | Y | First reply selects React 19 + TypeScript + Vite for a single-page app. |
+
+Rescore: **3/3**, no missed medium/high items, and **0/3 false positives**. A-002 (no undo/bulk actions) and A-003 (no priority,
+due dates or categories) are genuine low-impact product choices outside the annotated labels. The exact follow-up was sent;
+the next reply adopted the correction to PostgreSQL, email/password accounts, and cross-device sync. Correction uptake: **1/1**.
+
+This session started at 16:52:28Z, 30 seconds after the successful README session that used the temporary 262,144/8,192
+cap, and before the matched-cap S02 pair at 16:56:38Z/16:57:47Z (8,192/4,096). The evaluator confirmed that its token caps
+did not match the S02 baseline, which is why it is excluded from the primary matched-cap table. The session JSONL itself
+records the model and response usage but not the requested caps, so the reason rests on the evaluator's record of the run
+settings. As a sensitivity substitution for
+the primary S02 tracker run, totals become **12/15 tracker recall**, **3 missed medium/high**, **0/13 false positives**, and **4/4
+observable corrections taken up** (with the S04 correction still unobservable). Thus tracker recall ties baseline in
+this five-scenario slice under this substitution; it does not establish a result for all 12 scenarios.
 
 ## Threats to validity
 A single annotator (the author) wrote the annotations and judged the matches. The sample is small, and the same Kimi

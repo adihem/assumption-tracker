@@ -129,6 +129,6 @@
   was 3/3 observable (1 unobservable after a 402). Details are in `docs/EVALUATION.md`.
 - Audit by the assistant against the session files: all 10 cited sessions exist, and the counts match (recorded items, reviews, injections).
   S04's sessions are in `%TEMP%\pi-eval-s04-config` (may be cleaned up). There were 10 other attempts (402s, truncations, one other model),
-  now listed in EVALUATION.md. One complete S02 tracker run (`01a14ac7-7618`) was excluded with no recorded reason (to confirm).
+  now listed in EVALUATION.md. One complete S02 tracker run (`01a14ac7-7618`) was excluded because its token caps did not match the S02 baseline (confirmed by the evaluator); a sensitivity rescore with it gives tracker 12/15.
 - README first-run check (agent-run, not a classmate): passed after a temporary 8,192 max-tokens cap. README fixes: clone
   line, `/login`, trust warning, the 402 `modelOverrides.maxTokens` workaround, and expired keys. See `docs/README_TEST.md`.
