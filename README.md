@@ -54,7 +54,7 @@ are final in v1. Reviewing never starts an agent run by itself.
    - A-001 CORRECTED: instead of "...", do "Store the data in PostgreSQL, because multiple teachers use it at once".
    Do not treat pending or deferred assumptions as approved.
    ```
-   The reply should now use PostgreSQL. In our live check it did (see [PROGRESS.md](PROGRESS.md), Phase 5).
+   The reply should now use PostgreSQL.
 5. Exit and run `npm run pi -- -c`. `/assumptions all` shows the same state. `/tree` to an earlier point shows that branch's state.
 
 Tip: end follow-ups with an explicit "stop after this answer". A bare "ok" may be read as permission to start writing files.
@@ -82,8 +82,6 @@ Tip: end follow-ups with an explicit "stop after this answer". A bare "ok" may b
   never presented as approved.
 - Pi writes a new session to disk only after its first chat message. Items added before that are lost on exit, and the
   commands warn you.
-
-Build log per phase: [PROGRESS.md](PROGRESS.md).
 
 ## Scripts
 | Script | Purpose | Needs a model |
