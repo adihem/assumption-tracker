@@ -65,6 +65,7 @@ export default function assumptionTracker(pi: ExtensionAPI) {
       "Call record_assumption when you choose a meaningful default or design interpretation the user did not specify, especially choices affecting data storage, security, dependencies, interoperability, or work that is expensive to reverse.",
       "Do not record requirements the user stated explicitly, and do not record trivial implementation details unless they affect the user's goals.",
       "Keep the description concise and never include secrets or code. Recording an assumption does not mean the user approved it.",
+      "This also applies when you only describe a plan: record_assumption does not create or change project files, so use it even when told not to create files.",
     ],
     parameters: RecordParams,
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
