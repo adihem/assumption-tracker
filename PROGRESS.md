@@ -24,7 +24,7 @@
 - Tests: 27 passing (`tests/validation.test.ts`, `tests/state.test.ts`), covering plan §14.1 items 1–16 and 20.
   Items 17–19 (formatter) belong to Phases 3/5.
 
-## Phase 2 — Model-callable assumption registration ✅ code / ⏳ live agent check (2026-10-17)
+## Phase 2 — Model-callable assumption registration ✅ (2026-10-17)
 - `record_assumption` tool (TypeBox schema, `StringEnum` impact, optional `reason`), with model guidance from plan §9.3
   in `description`, `promptSnippet` and `promptGuidelines`.
 - Flow: validate → duplicate check → `pi.appendEntry("assumption-tracker", event)` → commit state → footer count.
@@ -38,6 +38,12 @@
   invalid input → no persist, duplicate → same ID, concurrent calls → unique IDs, append failure, no-UI mode,
   restore on resume, `session_tree` rebuild, invalid saved entries skipped with a warning.
 - Scenario: `scenarios/attendance-app.md`.
-- Pending: the "done when" gate (a genuine agent call that is still visible after restart) needs a logged-in model. The user runs it.
+- Live gate ✅ (2026-10-17, Pi 1.3.0, OpenRouter):
+  - Run 1, `nvidia/nemotron-3.5-super-vl:free`, thinking off: **no tool call**. The model chose React, localStorage and Vite unprompted.
+    Likely cause: "do not create files" read as "use no tools". Fix: guideline that record_assumption is allowed in plan-only turns.
+  - Run 2, `thinkingmachines/inkling:free`, thinking medium: recorded `A-001 "Data storage choice"` (medium). The footer showed
+    `Assumptions: 1 pending`. After `pi -c` the footer was restored, and the session file holds one valid `created` entry.
+  - Scenario recall in run 2: 1/3 (storage ✓; app type/stack and authentication not recorded).
+  - Unrelated noise: OpenRouter 402 errors (Pi requested max_tokens ≈ 233k, more than the free credits allow) before the call succeeded.
 
 ## Next: Phase 3 — user review commands
