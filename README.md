@@ -68,3 +68,9 @@ from a script. Uses an in-memory session and no model. Prints `E2E OK` and the f
 ## Privacy
 Assumptions are stored as custom entries in the Pi session file, alongside the conversation history. Don't put secrets in them.
 The extension makes no network calls of its own.
+
+## Sessions and branches
+Assumptions follow Pi's session tree. After `/tree` (or `/fork`, `/resume`, `/new`), the list is rebuilt from the
+active branch only, so decisions made on another branch never appear. IDs are unique within a branch.
+Pi writes a new session to disk only after its first chat message. Assumptions added before that are lost if you exit
+first, and the commands warn about this.

@@ -68,4 +68,20 @@
     The step "re-review A-002 without Defer" was typed as chat text instead of a `/` command, so the agent explored the repo read-only.
     That path is covered by an automated test.
 
-## Next: Phase 4 — session branch behaviour tests
+## Phase 4 — Correct session behaviour ✅ automated / ⏳ manual /tree check (2026-10-17)
+- Restore was already wired in Phase 2: `session_start` and `session_tree` both call `loadState(getBranch())`, and restoring never writes.
+- `tests/branching.test.ts` (8 tests) uses Pi's real `SessionManager.inMemory()` tree, not a mock:
+  - A branch made before a review shows the item as pending, and returning restores the decision.
+  - Two branches can hold different decisions for the same item.
+  - IDs and duplicates come from the active branch only (the same ID can exist on two branches).
+  - Navigating before the first item gives an empty list.
+  - A new session starts empty, an unrelated session never leaks in, and a resume restores everything.
+  - Restoring writes nothing.
+- Mutation check: replacing `getBranch()` with `getEntries()` fails 4 branch tests.
+- Finding (Pi behaviour): Pi writes a new session file only after its first user/assistant message (`SessionManager._persist`).
+  Items added or reviewed before that are lost on exit. `/add-assumption` and `/review-assumption` now warn in that case.
+- No real-Pi branch e2e: RPC `fork` and `/tree` need user messages, which need a model call. A probe accidentally sent one request
+  ("hello") to the user's OpenRouter model, so the scripts now avoid model calls entirely. The branch check stays manual (`/tree`).
+- Tests: 61 passing.
+
+## Next: Phase 5 — inform the agent of review decisions

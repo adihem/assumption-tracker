@@ -2,7 +2,7 @@ import { StringEnum } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { detailText, HELP_TEXT, listText, reviewLabel, statusText } from "./formatter.ts";
-import { loadState } from "./persistence.ts";
+import { hasConversation, loadState, NOT_YET_SAVED_WARNING } from "./persistence.ts";
 import {
   applyEvent,
   awaitingReview,
@@ -120,6 +120,8 @@ export default function assumptionTracker(pi: ExtensionAPI) {
     return undefined;
   };
 
+  const unsavedNote = (ctx: ExtensionContext) => (hasConversation(ctx.sessionManager) ? "" : NOT_YET_SAVED_WARNING);
+
   /** Without dialog-capable UI, explain on stderr (keeps JSON/print stdout clean) and do nothing. */
   const requireUI = (ctx: ExtensionContext, command: string): boolean => {
     if (ctx.hasUI) return true;
@@ -173,7 +175,7 @@ export default function assumptionTracker(pi: ExtensionAPI) {
     const error = commit(buildReviewedEvent(target.id, status, new Date().toISOString(), correction, note));
     if (error) return ctx.ui.notify(`Not saved: ${error}`, "error");
     refreshStatus(ctx);
-    ctx.ui.notify(`${target.id} marked ${status}. The agent sees this on your next message.`, "info");
+    ctx.ui.notify(`${target.id} marked ${status}. The agent sees this on your next message.${unsavedNote(ctx)}`, "info");
   };
 
   const addAssumption = async (_args: string, ctx: ExtensionContext) => {
@@ -194,7 +196,7 @@ export default function assumptionTracker(pi: ExtensionAPI) {
       return ctx.ui.notify(error instanceof Error ? error.message : String(error), "error");
     }
     refreshStatus(ctx);
-    if (result.recorded) ctx.ui.notify(`Added ${result.assumption.id} (pending). Review it with /review-assumption.`, "info");
+    if (result.recorded) ctx.ui.notify(`Added ${result.assumption.id} (pending). Review it with /review-assumption.${unsavedNote(ctx)}`, "info");
     else ctx.ui.notify(`Already recorded as ${result.existing.id} (${result.existing.status}); nothing added.`, "warning");
   };
 

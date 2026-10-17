@@ -32,7 +32,8 @@ function mockPi(branch: Entry[] = [], hasUI = true) {
   };
   const ctx = {
     hasUI,
-    sessionManager: { getBranch: () => branch },
+    // getEntries includes a chat message so the session counts as written to disk (see branching tests for the other case).
+    sessionManager: { getBranch: () => branch, getEntries: () => [{ type: "message", message: { role: "user" } }, ...branch] },
     ui: {
       setStatus: (_key: string, text: string | undefined) => statuses.push(text),
       notify: (message: string) => notifications.push(message),
