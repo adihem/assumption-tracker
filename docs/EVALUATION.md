@@ -3,8 +3,8 @@
 **Question:** Can lightweight, non-blocking assumption tracking help users notice and correct AI coding decisions
 without frequent interruptive clarification questions?
 
-This is a small, formative evaluation: one evaluator, a few free models, simulated tasks. Report the actual numbers,
-including poor ones.
+This is a small, formative evaluation: five scenarios, one model, and simulated task runs. Report the actual numbers,
+including poor ones. Four runs were delegated to simulated personas; they are not independent human participants.
 
 ## Materials
 - 12 scenarios with 3 pre-annotated ambiguities each: [`scenarios/annotated-assumptions.json`](../scenarios/annotated-assumptions.json).
@@ -52,14 +52,77 @@ These used the S01 prompt while the extension was still changing, so they only s
 Practical issue: OpenRouter free tiers returned many `402` errors (Pi requests ~233k max tokens) before a call succeeded.
 
 ### Formal runs
-_Not run yet. Paste one `npm run extract` sheet per scenario and condition, then fill in the summary._
 
-| Condition | Model | Scenarios | Recall | Missed critical | False-positive fraction | Correction uptake |
-|---|---|---|---|---|---|---|
-| Baseline | | /12 | /36 | | n/a | n/a |
-| Tracker | | /12 | /36 | | | / |
+Run on 2026-10-17 with Pi 1.3.0 and `openrouter/moonshotai/kimi-k2.6` at medium thinking. Each condition used a fresh
+session and the exact annotated prompt plus the documented suffix. Every session was passed to
+`npm run extract -- <session-id> <scenario-id>`; the session IDs and filled Y/N scores are below. Token caps were matched
+within each pair: S01, S03 and S05 used 262,144 context / 8,192 max output; S02 and S04 used 8,192 / 4,096.
+
+The four delegated runs used distinct simulated perspectives: Clara (methodical first-time student, S02), Max (hurried
+but capable student, S03), Sam (skeptical engineering student, S04), and Nina (privacy-first student, S05). The primary
+operator ran S01 and the README check. These perspectives add task variation, not human-subject evidence.
+
+| Condition | Model | Scenarios | Recall | Missed medium/high | False-positive fraction | Correction uptake |
+|---|---|---:|---:|---|---:|---|
+| Baseline | `openrouter/moonshotai/kimi-k2.6` | 5/12 | **12/15** | 3: S01 auth (high), S02 multi-user (medium), S04 API auth (high) | n/a | n/a |
+| Tracker | `openrouter/moonshotai/kimi-k2.6` | 5/12 | **11/15** | 4: S01 auth (high), S02 multi-user (medium), S03 auth-method and password-storage (both high) | **0/10** | **3/3 observable**; one additional correction could not be observed |
+
+Each scenario had three annotated ambiguities. “Y/N” follows the annotations' `countsIf` rules; order is the annotation
+order in `scenarios/annotated-assumptions.json`. A tracker item only counts as surfaced when recorded or explicitly
+stated as an assumption/asked about in the first reply. S03's password and password-hashing design was not recorded or
+framed as an assumption, so it is N under that rule.
+
+| Scenario | Condition | Session ID | Y/N by annotation | Recall | Missed medium/high |
+|---|---|---|---|---:|---|
+| S01 attendance | Baseline | `01a14aca-133b-77c3-b38e-290998065638` | storage Y; app-type Y; auth N | 2/3 | auth (high) |
+| S01 attendance | Tracker | `01a14ac7-0389-733d-875a-7dfa8f37997d` | storage Y; app-type Y; auth N | 2/3 | auth (high) |
+| S02 todo | Baseline | `01a14acb-45d5-750a-aa41-882ceae6d2c5` | storage Y; multi-user N; platform Y | 2/3 | multi-user (medium) |
+| S02 todo | Tracker | `01a14acc-52fa-752a-b49f-dfff42bfb54e` | storage Y; multi-user N; platform Y | 2/3 | multi-user (medium) |
+| S03 login | Baseline | `01a14ad0-8b9f-7244-848a-856096ef1426` | auth-method Y; password-storage Y; session Y | 3/3 | none |
+| S03 login | Tracker | `01a14ad2-0d8f-772f-9943-7f7ce3c1c494` | auth-method N; password-storage N; session Y | 1/3 | auth-method (high), password-storage (high) |
+| S04 REST API | Baseline | `01a14ac7-7c51-73d6-8712-b3a788c7f10c` | framework Y; storage Y; api-auth N | 2/3 | api-auth (high) |
+| S04 REST API | Tracker | `01a14ac8-3830-746d-b546-ca9c47c0abed` | framework Y; storage Y; api-auth Y | 3/3 | none |
+| S05 file upload | Baseline | `01a14ad5-3752-7475-8e34-cf8dd12e9940` | upload-storage Y; limits Y; processing Y | 3/3 | none |
+| S05 file upload | Tracker | `01a14ad6-7a63-764e-a08b-46e069f60de2` | upload-storage Y; limits Y; processing Y | 3/3 | none |
+
+#### Extract and review notes
+
+- **S01:** Baseline chose Next.js/TypeScript/SQLite+Prisma and surfaced storage and app type, but not authentication. Tracker recorded A-001 (CLI vs web and local JSON storage; medium), then the operator corrected it to PostgreSQL for multiple teachers. The decision note appeared before the next answer, which used PostgreSQL. One correction; uptake 1/1; 0/1 false positives.
+- **S02:** Baseline chose React 19/TypeScript/Vite and localStorage. Tracker chose React/TypeScript/Tailwind and localStorage but made no `record_assumption` calls. Both replies were truncated after the relevant choices; the visible first replies were scored. No review or correction; tracker false positives 0/0.
+- **S03:** Baseline described email/password fields, bcrypt, and an HttpOnly-cookie JWT session. Tracker recorded four candidates (React/Vite, Tailwind, cookie sessions vs JWT in localStorage, and React Hook Form/Zod). A-003 was corrected to server-side sessions with an opaque ID in a Secure/HttpOnly/SameSite=Strict cookie; the injected decision appeared before the follow-up, which adopted the server-side store and did not use JWT. One correction; uptake 1/1; 0/4 false positives. Under the stated criterion the tracker still missed auth method and password storage.
+- **S04:** Baseline proposed Node's native HTTP module or Express and in-memory persistence, but did not mention authentication. Tracker recorded TypeScript/Express/SQLite, no authentication, and SQLite file persistence. A-001 was corrected to JavaScript/Fastify and leaving the database open. The first reply surfaced all three labels; 0/3 false positives. The prescribed follow-up was sent and the decision injection appeared, but OpenRouter returned `402 in_flight_budget_exhausted` before the reply, so uptake is unobserved, not scored as failure.
+- **S05:** Baseline proposed S3-compatible object storage, JPEG/PNG/WebP and a 5–10 MB limit, plus resized images and thumbnails. Tracker recorded local filesystem storage and an existing users/auth table, and also specified a 5 MB/type validation and Sharp resizing/thumbnailing. A-001 was corrected to S3/R2 object storage with the object key in the database; the next reply acknowledged and followed it. One correction; uptake 1/1; 0/2 false positives. The privacy-first evaluator noted that avatar visibility/access remained undecided.
+
+Across tracker sessions there were 10 reported candidates and no items judged false positives. S05's A-002 was treated as a genuine but unannotated assumption about existing authentication/users. There were four corrections total; uptake was visible in three successful follow-ups, while S04's follow-up was blocked by the provider error. No recording-caused blocking dialog was observed. The README run did show a non-blocking Pi project-trust warning.
+
+This is **12/15 baseline and 11/15 tracker**, not a full-set result out of 36. Five of twelve scenarios are a formative sample; no estimate for the unrun seven scenarios is implied. S02's truncated responses and S04's provider failure further limit interpretation.
+
+#### All attempts and exclusions
+Every evaluation-window session found in the Pi session folders. Most are in `~/.pi/agent/sessions/`; S04 is in
+`%TEMP%\pi-eval-s04-config\sessions\`. The list was audited from the session files on 2026-10-17.
+Inclusion rule as applied: the first attempt per scenario × condition with Kimi K2.6, matched token caps, and a complete
+(not error/`length`-truncated) **first** reply. Truncation of a later follow-up does not exclude a run (S02 tracker).
+
+| Session | Scenario | Condition | Outcome | Used? | Reason |
+|---|---|---|---|---|---|
+| `01a14ac6-0042` | S02 | — | 402, no reply | no | provider error |
+| `01a14ac6-180d` | S03 | — | 402, no reply | no | provider error |
+| `01a14ac6-1954` | S01 | — | 402, no reply | no | provider error |
+| `01a14ac6-4ae2` | S04 | — | 402, no reply | no | provider error |
+| `01a14ac7-7618` | S02 | tracker | complete; recorded 3 (A-001 "No backend or auth needed", A-002, A-003); A-001 corrected | no | **to confirm** (likely token caps not matched with the S02 baseline) |
+| `01a14ac7-a5ae` | S03 | baseline | complete | no | different model (`z-ai/glm-4.6`) |
+| `01a14ac8-908a` | S03 | tracker | 402 after tool calls, no reply | no | provider error |
+| `01a14ac8-cc10` | S02 | baseline | 402, no reply | no | provider error |
+| `01a14ace-c5e9` | S03 | baseline | first reply truncated (`length`) | no | truncated |
+| `01a14acf-aa16` | S03 | tracker | first reply truncated (`length`), 0 recorded | no | truncated |
+| the 10 sessions in the table above | | | | yes | |
+
+Sensitivity: if `01a14ac7-7618` replaced `01a14acc` as the S02 tracker run, its recorded "No backend or auth needed" item
+would bear on S02 storage and multi-user. Rescore it with `npm run extract -- 01a14ac7-7618 S02-todo` before drawing any
+conclusion from the 12/15 vs 11/15 difference.
 
 ## Threats to validity
-A single annotator (the author) wrote the annotations and judged the matches. The sample is small, and free models with
-variable availability were used. Judging "surfaced" in the baseline is subjective. Plan-only prompts may change how often
-agents record assumptions compared with real implementation work. See [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md).
+A single annotator (the author) wrote the annotations and judged the matches. The sample is small, and the same Kimi
+model was used for all formal runs; outputs may vary on a rerun. The simulated personas are not independent human users.
+Judging "surfaced" in the baseline is subjective. Plan-only prompts may change how often agents record assumptions
+compared with real implementation work. See [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md).

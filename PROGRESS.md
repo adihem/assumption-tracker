@@ -124,3 +124,11 @@
 - Fresh-clone check: `git clone` → `npm ci --ignore-scripts` → test (70) / typecheck / smoke / e2e all pass.
 - No model calls made by the assistant in this phase. Evaluation runs, the S1/S3/S4/S6/S10 manual confirmations and the
   screen recording are the user's.
+- Formative evaluation run by the user (2026-10-17, Kimi K2.6 via OpenRouter, S01–S05, four runs delegated to simulated
+  personas): baseline recall 12/15, tracker 11/15; tracker missed 4 medium/high items, had 0/10 false positives, and correction uptake
+  was 3/3 observable (1 unobservable after a 402). Details are in `docs/EVALUATION.md`.
+- Audit by the assistant against the session files: all 10 cited sessions exist, and the counts match (recorded items, reviews, injections).
+  S04's sessions are in `%TEMP%\pi-eval-s04-config` (may be cleaned up). There were 10 other attempts (402s, truncations, one other model),
+  now listed in EVALUATION.md. One complete S02 tracker run (`01a14ac7-7618`) was excluded with no recorded reason (to confirm).
+- README first-run check (agent-run, not a classmate): passed after a temporary 8,192 max-tokens cap. README fixes: clone
+  line, `/login`, trust warning, the 402 `modelOverrides.maxTokens` workaround, and expired keys. See `docs/README_TEST.md`.

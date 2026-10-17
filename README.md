@@ -11,15 +11,16 @@ decisions or undo code. See [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.m
 Requirements: Node.js 22.19+ (tested on 26.3.0), npm, and Git. Pi is installed as a project dependency
 (`@earendil-works/pi-coding-agent` 1.3.0), so no global install is needed.
 
+Get the project folder first: clone it from the repository URL you were given, or unzip a copy. Then, inside it:
 ```bash
-git clone <this repo> && cd assumption-tracker
 npm install --ignore-scripts
 npm test
 npm run smoke
 npm run pi
 ```
-`npm test` (70 tests) and `npm run smoke` need no model or account. Before using the agent inside Pi, run `/login` and then
-`/model`. On Windows, if Git reports "Filename too long", run `git config core.longpaths true`.
+`npm test` (70 tests) and `npm run smoke` need no model or account. Before using the agent inside Pi, set up a model
+(see [Model setup](#model-setup-and-troubleshooting)). On Windows, if Git reports "Filename too long", run
+`git config core.longpaths true`.
 
 ## Commands
 | Command | What it does |
@@ -52,6 +53,21 @@ are final in v1. Reviewing never starts an agent run by itself.
 
 Tip: end follow-ups with an explicit "stop after this answer". A bare "ok" may be read as permission to start writing files.
 
+## Model setup and troubleshooting
+- **Logging in:** in Pi, run `/login`, choose your provider (for example OpenRouter), and paste its API key. If the provider is
+  already marked as stored, you don't need to enter it again. Press Esc; an "aborted" message afterwards is harmless. Then
+  pick a model with `/model`.
+- **"This project is not trusted…"** is expected. `npm run pi` passes `-na`, so Pi ignores this folder's `.pi/` settings and
+  loads the extension once, from `-e`. Check `[Extensions] assumption-tracker.ts` at startup and leave `/trust` alone.
+- **OpenRouter `402 … requires more credits, or fewer max_tokens`:** Pi asks for the model's full output limit (about 233k
+  tokens for some models). Either add credits, or cap the output in `~/.pi/agent/models.json` (create the file if needed):
+  ```json
+  { "providers": { "openrouter": { "modelOverrides": { "moonshotai/kimi-k2.6": { "maxTokens": 8192 } } } } }
+  ```
+  Use your model's ID. Reopen `/model` to reload it. This applies to all Pi use on your account, so remove it when you're done.
+  Very small caps can truncate replies.
+- **`401 API key expired`:** renew the key at the provider and run `/login` again, or switch models with `/model`.
+
 ## How it works
 - Every created or reviewed event is saved as a custom entry in the Pi session. State is rebuilt from the **active
   branch** on start, resume and `/tree`, so decisions never leak between branches or sessions.
@@ -81,7 +97,7 @@ Build log per phase: [PROGRESS.md](PROGRESS.md).
 ## Evaluation
 There are 12 scenarios with pre-annotated ambiguities in [scenarios/annotated-assumptions.json](scenarios/annotated-assumptions.json).
 Protocol, metrics, pilot results and the empty results table are in [docs/EVALUATION.md](docs/EVALUATION.md). Test coverage and
-manual scenario status are in [docs/TEST_PLAN.md](docs/TEST_PLAN.md).
+manual scenario status are in [docs/TEST_PLAN.md](docs/TEST_PLAN.md). A first-run check of this README is in [docs/README_TEST.md](docs/README_TEST.md).
 
 ## Layout
 ```text
