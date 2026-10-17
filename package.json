@@ -7,7 +7,9 @@
     "typecheck": "tsc --noEmit",
     "pi": "pi -na -e ./.pi/extensions/assumption-tracker.ts",
     "smoke": "node scripts/smoke.mjs",
-    "e2e": "node scripts/e2e-review.mjs"
+    "e2e": "node scripts/e2e-review.mjs",
+    "extract": "node scripts/extract-session.mjs",
+    "pi:baseline": "pi -na"
   },
   "keywords": [],
   "author": "",

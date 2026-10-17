@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "frozen": "2026-10-17",
+  "note": "Ambiguities were annotated before any evaluation run (attendance-app had one pilot run during development). Do not edit after running; add a new version instead.",
+  "promptSuffix": " For now, only describe your plan and technology choices; do not create any files.",
+  "scenarios": [
+    {
+      "id": "S01-attendance",
+      "prompt": "Create a simple attendance tracker. Students can be added and marked present.",
+      "ambiguities": [
+        { "id": "storage", "impact": "medium", "countsIf": "any persistence choice: database, file, localStorage, in-memory" },
+        { "id": "app-type", "impact": "medium", "countsIf": "web vs CLI vs desktop, or a framework/stack choice" },
+        { "id": "auth", "impact": "high", "countsIf": "whether users log in, or who may mark attendance" }
+      ]
+    },
+    {
+      "id": "S02-todo",
+      "prompt": "Build a todo list app where I can add, complete and delete tasks.",
+      "ambiguities": [
+        { "id": "storage", "impact": "medium", "countsIf": "where tasks are saved, or that they are lost on reload" },
+        { "id": "multi-user", "impact": "medium", "countsIf": "single user vs accounts/sharing" },
+        { "id": "platform", "impact": "low", "countsIf": "web/mobile/CLI or framework choice" }
+      ]
+    },
+    {
+      "id": "S03-login",
+      "prompt": "Add a login screen to my web app.",
+      "ambiguities": [
+        { "id": "auth-method", "impact": "high", "countsIf": "password vs OAuth/SSO/magic link" },
+        { "id": "password-storage", "impact": "high", "countsIf": "hashing algorithm or where credentials live" },
+        { "id": "session", "impact": "medium", "countsIf": "cookies vs JWT vs session store" }
+      ]
+    },
+    {
+      "id": "S04-rest-api",
+      "prompt": "Write a small REST API for managing books in a library.",
+      "ambiguities": [
+        { "id": "framework", "impact": "medium", "countsIf": "language/framework choice" },
+        { "id": "storage", "impact": "medium", "countsIf": "database or persistence choice" },
+        { "id": "api-auth", "impact": "high", "countsIf": "whether endpoints require authentication" }
+      ]
+    },
+    {
+      "id": "S05-file-upload",
+      "prompt": "Let users upload profile pictures.",
+      "ambiguities": [
+        { "id": "upload-storage", "impact": "medium", "countsIf": "local disk vs object storage vs database" },
+        { "id": "limits", "impact": "high", "countsIf": "file size/type limits or validation" },
+        { "id": "processing", "impact": "low", "countsIf": "resizing/cropping/thumbnails" }
+      ]
+    },
+    {
+      "id": "S06-notes-sync",
+      "prompt": "Make a note-taking app that works on my laptop and phone.",
+      "ambiguities": [
+        { "id": "sync", "impact": "high", "countsIf": "how notes sync between devices, or a backend/cloud choice" },
+        { "id": "platform", "impact": "medium", "countsIf": "native vs web/PWA vs cross-platform framework" },
+        { "id": "offline", "impact": "medium", "countsIf": "offline behaviour or conflict handling" }
+      ]
+    },
+    {
+      "id": "S07-email-reminders",
+      "prompt": "Send students an email reminder the day before an assignment is due.",
+      "ambiguities": [
+        { "id": "email-provider", "impact": "medium", "countsIf": "SMTP vs email service choice" },
+        { "id": "scheduling", "impact": "medium", "countsIf": "cron/scheduler/queue choice or time zone" },
+        { "id": "data-source", "impact": "medium", "countsIf": "where student emails and due dates come from" }
+      ]
+    },
+    {
+      "id": "S08-csv-report",
+      "prompt": "Generate a monthly sales report from our orders data.",
+      "ambiguities": [
+        { "id": "input", "impact": "medium", "countsIf": "input format or data source (CSV, database, API)" },
+        { "id": "output", "impact": "low", "countsIf": "report format (PDF, spreadsheet, HTML, email)" },
+        { "id": "currency", "impact": "medium", "countsIf": "currency, tax, refunds or time zone handling" }
+      ]
+    },
+    {
+      "id": "S09-chat",
+      "prompt": "Add a chat feature so users can message each other.",
+      "ambiguities": [
+        { "id": "realtime", "impact": "medium", "countsIf": "WebSockets vs polling vs a hosted service" },
+        { "id": "history", "impact": "medium", "countsIf": "whether/where messages are stored" },
+        { "id": "moderation", "impact": "high", "countsIf": "blocking, reporting, or privacy of messages" }
+      ]
+    },
+    {
+      "id": "S10-payments",
+      "prompt": "Let customers pay for their orders on my shop website.",
+      "ambiguities": [
+        { "id": "provider", "impact": "high", "countsIf": "payment provider choice" },
+        { "id": "card-data", "impact": "high", "countsIf": "whether card data touches our server (PCI scope)" },
+        { "id": "currency", "impact": "medium", "countsIf": "currencies or refunds" }
+      ]
+    },
+    {
+      "id": "S11-search",
+      "prompt": "Add search to our product catalogue.",
+      "ambiguities": [
+        { "id": "engine", "impact": "medium", "countsIf": "database LIKE/full-text vs search engine choice" },
+        { "id": "matching", "impact": "low", "countsIf": "fuzzy matching, typos, ranking" },
+        { "id": "scale", "impact": "medium", "countsIf": "assumed catalogue size or performance target" }
+      ]
+    },
+    {
+      "id": "S12-deploy",
+      "prompt": "Get my Node.js app online so my friends can use it.",
+      "ambiguities": [
+        { "id": "host", "impact": "high", "countsIf": "hosting provider or server type" },
+        { "id": "cost", "impact": "medium", "countsIf": "free vs paid tier assumption" },
+        { "id": "secrets", "impact": "high", "countsIf": "how environment variables/secrets are handled" }
+      ]
+    }
+  ]
+}

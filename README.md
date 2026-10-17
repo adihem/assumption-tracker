@@ -1,83 +1,99 @@
-# Assumption Tracker (Pi extension)
+# Assumption Tracker for the Pi coding agent
 
-Pi coding agent extension that records agent-reported assumptions for human review.
-Status: **Phase 5**. The agent records candidate assumptions with the `record_assumption` tool. You list, add and
-review them with slash commands. Your accepted, corrected and rejected decisions are shown to the agent at the start
-of your next message. Everything is saved in the Pi session and follows its branches.
+A [Pi](https://pi.dev) extension that makes an AI coding agent's unstated choices **visible, reviewable and
+persistent**. The agent can report a *candidate assumption*, for example "Use SQLite for storage", without stopping its work.
+You review it whenever you like (accept, correct, defer or reject), and your decision reaches the agent on your next message.
+
+Recorded items are **agent-reported candidates, not detected facts**. The tracker informs the agent but does not enforce
+decisions or undo code. See [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md).
+
+## Quick start
+Requirements: Node.js 22.19+ (tested on 26.3.0), npm, and Git. Pi is installed as a project dependency
+(`@earendil-works/pi-coding-agent` 1.3.0), so no global install is needed.
+
+```bash
+git clone <this repo> && cd assumption-tracker
+npm install --ignore-scripts
+npm test
+npm run smoke
+npm run pi
+```
+`npm test` (70 tests) and `npm run smoke` need no model or account. Before using the agent inside Pi, run `/login` and then
+`/model`. On Windows, if Git reports "Filename too long", run `git config core.longpaths true`.
 
 ## Commands
 | Command | What it does |
 |---|---|
-| `/assumptions` | List pending and deferred items, with totals |
+| `/assumptions` | List pending and deferred items with totals |
 | `/assumptions all` | Also list accepted, corrected and rejected items |
-| `/review-assumption [ID]` | Pick an item (or name its ID), then Accept / Correct / Defer / Reject / Cancel, plus an optional note |
-| `/add-assumption` | Record an assumption the agent missed (title, description, optional reason, impact) |
+| `/review-assumption [ID]` | Choose an item, see its full text, then Accept / Correct / Defer / Reject / Cancel, plus an optional note |
+| `/add-assumption` | Record something the agent missed |
 | `/assumptions-help` | Explain the statuses |
+| `/tracker-hello` | Check that the extension and its tool are loaded |
 
-Esc at any dialog cancels without saving. Accepted, corrected and rejected are final in v1. Reviewing never starts an
-agent run by itself, and rejecting does not undo code that has already been written.
+The agent uses the `record_assumption` tool (title, description, optional reason, impact: low/medium/high). The footer
+shows `Assumptions: N pending[, M deferred]`. Esc in any dialog cancels without saving. Accepted, corrected and rejected
+are final in v1. Reviewing never starts an agent run by itself.
 
-Recorded items are *agent-reported* candidates, not detected facts, and recording one never blocks the agent.
+## Walkthrough (about 5 minutes, needs a model)
+1. Run `npm run pi`, then send: *"Create a simple attendance tracker. Students can be added and marked present. For now, only
+   describe your plan and technology choices; do not create any files."*
+2. The agent calls `record_assumption`, for example `Recorded A-001 (pending user review)`, and the footer shows `Assumptions: 1 pending`.
+   If it records nothing, add one yourself with `/add-assumption`.
+3. Run `/review-assumption A-001`, choose **Correct**, and enter `Use PostgreSQL, because multiple teachers use it at once`.
+4. Send: *"Continue: describe the data layer, following the reviewed decisions. Do not create files. Stop after this answer."*
+   A `[assumption-tracker-decisions]` note appears just before the reply:
+   ```text
+   - A-001 CORRECTED: instead of "...", do "Use PostgreSQL, because multiple teachers use it at once".
+   Do not treat pending or deferred assumptions as approved.
+   ```
+   The reply should now use PostgreSQL. In our live check it did (see [PROGRESS.md](PROGRESS.md), Phase 5).
+5. Exit and run `npm run pi -- -c`. `/assumptions all` shows the same state. `/tree` to an earlier point shows that branch's state.
 
-## Requirements
-- Node.js 22.19+ (tested on 26.3.0), npm, Git
-- Pi is a project dependency (`@earendil-works/pi-coding-agent` 1.3.0); run it with `npx pi`, no global install needed.
-- A model provider in Pi (`/login`, then `/model`) for anything involving the agent. Unit tests and smoke check need none.
+Tip: end follow-ups with an explicit "stop after this answer". A bare "ok" may be read as permission to start writing files.
 
-## Setup
-```bash
-npm install --ignore-scripts
-npm run typecheck
-npm test
-```
+## How it works
+- Every created or reviewed event is saved as a custom entry in the Pi session. State is rebuilt from the **active
+  branch** on start, resume and `/tree`, so decisions never leak between branches or sessions.
+- On each message you send, a short summary of accepted, corrected and rejected items (newest first, ≤1,500 chars, quoted
+  as data) is added to that run, but only if it changed since the copy the model still sees. Pending and deferred items are
+  never presented as approved.
+- Pi writes a new session to disk only after its first chat message. Items added before that are lost on exit, and the
+  commands warn you.
 
-## Run in Pi
-```bash
-npm run pi
-```
-This runs `pi -na -e ./.pi/extensions/assumption-tracker.ts`. `-na` skips trust-gated
-project-local auto-discovery, so the extension is loaded once, from the explicit `-e` path.
-Extra Pi flags go after `--`, e.g. `npm run pi -- -c` continues the most recent session.
+Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Original spec: [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md).
+Build log per phase: [PROGRESS.md](PROGRESS.md).
 
-In Pi, `/tracker-hello` reports "Assumption Tracker loaded. record_assumption tool: active."
+## Scripts
+| Script | Purpose | Needs a model |
+|---|---|---|
+| `npm test` | Unit, mock-Pi and real-`SessionManager` tests | no |
+| `npm run typecheck` | `tsc --noEmit`, strict mode | no |
+| `npm run smoke` | Real Pi (RPC): loads, commands registered, tool active | no |
+| `npm run e2e` | Real Pi (RPC): add → correct → list via scripted dialogs | no |
+| `npm run pi` | Pi with the extension (`pi -na -e ./.pi/extensions/assumption-tracker.ts`) | yes |
+| `npm run pi:baseline` | Pi without the extension, for evaluation | yes |
+| `npm run extract -- <session-id> [scenario-id]` | Scoring sheet from a session file (read-only) | no |
 
-## Headless smoke check (no model/login needed)
-```bash
-npm run smoke
-```
-Starts Pi in RPC mode, checks that all commands are registered, runs `/tracker-hello`, and expects the message that
-confirms the tool is active. Prints `SMOKE OK` (exit 0) or `SMOKE FAILED {...}` (exit 1). Works in PowerShell, cmd and bash.
+`-na` makes Pi ignore the untrusted project `.pi/` folder, so the extension loads once, from `-e`. Pass extra Pi flags after
+`--`, for example `npm run pi -- -c`.
 
-```bash
-npm run e2e
-```
-Drives `/add-assumption` → `/review-assumption` (correct) → `/assumptions all` in real Pi over RPC, answering the dialogs
-from a script. Uses an in-memory session and no model. Prints `E2E OK` and the final list.
+## Evaluation
+There are 12 scenarios with pre-annotated ambiguities in [scenarios/annotated-assumptions.json](scenarios/annotated-assumptions.json).
+Protocol, metrics, pilot results and the empty results table are in [docs/EVALUATION.md](docs/EVALUATION.md). Test coverage and
+manual scenario status are in [docs/TEST_PLAN.md](docs/TEST_PLAN.md).
 
 ## Layout
-- `src/types.ts`: data contract and constants
-- `src/validation.ts`: input checks, whitespace normalization, persisted-entry shape check
-- `src/state.ts`: pure reducer (create/review/replay, duplicates, counts)
-- `src/persistence.ts`: rebuilds state from the active session branch
-- `src/formatter.ts`: footer text
-- `src/extension.ts`: Pi wiring (tool, commands, session events)
-- `.pi/extensions/assumption-tracker.ts`: thin entry point re-exporting the extension
-- `tests/`: unit tests and mock-Pi integration tests
-- `scenarios/`: manual test prompts with pre-annotated ambiguities
+```text
+src/            types, validation, state (pure), persistence, formatter, extension (Pi wiring)
+.pi/extensions/ thin entry point re-exporting src/extension.ts
+tests/          vitest suites (no model needed)
+scripts/        smoke, e2e, extract-session
+scenarios/      evaluation prompts + annotations
+docs/           architecture, evaluation, test plan, limitations, original plan
+```
 
 ## Privacy
-Assumptions are stored as custom entries in the Pi session file, alongside the conversation history. Don't put secrets in them.
-The extension makes no network calls of its own.
-
-## Sessions and branches
-Assumptions follow Pi's session tree. After `/tree` (or `/fork`, `/resume`, `/new`), the list is rebuilt from the
-active branch only, so decisions made on another branch never appear. IDs are unique within a branch.
-Pi writes a new session to disk only after its first chat message. Assumptions added before that are lost if you exit
-first, and the commands warn about this.
-
-## How the agent learns your decisions
-When you send a message, the extension adds a short note to that run: *"Human-reviewed project decisions… A-001
-CORRECTED: instead of \"Use SQLite database\", do \"Use PostgreSQL\"."* It is shown in the transcript. It is capped at about 1,500
-characters, newest first, and only sent when it changed since the copy the model still sees. Pending and deferred items are
-never presented as approved. This informs the agent but does not enforce anything: the agent can still ignore it, and nothing
-undoes code already written.
+Assumptions are stored in Pi session files (`~/.pi/agent/sessions/`), alongside the conversation. Don't type secrets into
+them. To remove a test session, delete its `.jsonl` file there. The extension makes no network calls; model traffic is
+Pi's own, sent to the provider you configure.

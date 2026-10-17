@@ -37,7 +37,7 @@
 - Tests: 37 passing (+10 in `tests/integration.test.ts`, which uses a mock Pi): registration and schema, one persisted event per call,
   invalid input → no persist, duplicate → same ID, concurrent calls → unique IDs, append failure, no-UI mode,
   restore on resume, `session_tree` rebuild, invalid saved entries skipped with a warning.
-- Scenario: `scenarios/attendance-app.md`.
+- Scenario: attendance app (now `S01-attendance` in `scenarios/annotated-assumptions.json`).
 - Live gate ✅ (2026-10-17, Pi 1.3.0, OpenRouter):
   - Run 1, `nvidia/nemotron-3.5-super-vl:free`, thinking off: **no tool call**. The model chose React, localStorage and Vite unprompted.
     Likely cause: "do not create files" read as "use no tools". Fix: guideline that record_assumption is allowed in plan-only turns.
@@ -111,3 +111,15 @@
   - The optional `/tree` step was not done; it is covered by the branching tests.
 
 ## Next: Phase 6 — polish and evaluation
+
+## Phase 6 — Polish and evaluation materials ✅ materials / ⏳ evaluation runs (2026-10-17)
+- `scenarios/annotated-assumptions.json`: 12 scenarios × 3 ambiguities (impact + "counts if" rule), frozen 2026-10-17.
+  It replaces `scenarios/attendance-app.md` (now S01).
+- `npm run extract -- <session-id> [scenario-id]`: read-only scoring sheet from a Pi session file
+  (model, tool calls, recorded items, reviews, injections, last reply, and a blank Y/N table for the scenario's ambiguities).
+- `npm run pi:baseline`: Pi without the extension (same `-na`, built-ins unchanged) for the comparison condition.
+- Docs: `docs/EVALUATION.md` (protocol, metrics, pilot P1–P3, empty formal results table), `docs/TEST_PLAN.md`
+  (automated coverage, S1–S10 status), `docs/KNOWN_LIMITATIONS.md`, `docs/ARCHITECTURE.md`, `docs/IMPLEMENTATION_PLAN.md` (copy of the spec).
+- README rewritten for a new reader: quick start, commands, a 5-minute walkthrough, how it works, scripts table.
+- No model calls made by the assistant in this phase. Evaluation runs, the S1/S3/S4/S6/S10 manual confirmations and the
+  screen recording are the user's.
